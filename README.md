@@ -3,6 +3,16 @@
 yarn add https://antoinewaag@bitbucket.org/adeliomgit/adeliom-upload-js.git
 ```
 
+# HTML
+
+```
+<div>
+    <input type="file" name="files[]" id="test">
+    <label for="test">Select a file...</label>
+</div>
+
+```
+
 # Import
 ```
 import Upload from './upload';
@@ -66,14 +76,4 @@ Upload.update({
     language: 'en',
     ...
 });
-```
-
-# HTML
-
-```
-<div>
-    <input type="file" name="files[]" id="test">
-    <label for="test">Select a file...</label>
-</div>
-
 ```
