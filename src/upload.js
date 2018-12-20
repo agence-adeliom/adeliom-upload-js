@@ -47,7 +47,8 @@ let options = {
         'en': 'left',
     },
     onSuccess: () => {},
-    onError: () => {}
+    onError: () => {},
+    onDelete: () => {}
 }
 
 
@@ -58,6 +59,7 @@ let options = {
  */
 
 let filesList = [];
+let maxTotalFilesSize;
 let wrapperFiles;
 let wrapperInput;
 let fileInput;
@@ -77,7 +79,7 @@ const init = settings => {
 
     options = Object.assign(options, settings);
 
-    options.maxTotalFilesSize = options.maxTotalFilesSize * 1048576;
+    maxTotalFilesSize = options.maxTotalFilesSize * 1048576;
 
     fileInput  = document.querySelector(options.selector);
 
@@ -169,7 +171,7 @@ const addNewFile = (event, files=[]) => {
 
     Object.values(filesArr).forEach((file) => {
 
-        const extension = '.'+ file.name.split('.').pop();
+        const extension = file.name.split('.').length > 1 ? '.'+ file.name.split('.').pop().toLowerCase() : null;
 
         if(options.fileExtensions.length && options.fileExtensions.indexOf(extension) === -1){
             options.onError({
@@ -180,6 +182,7 @@ const addNewFile = (event, files=[]) => {
             });
             error.innerHTML = options.textFileNotValid[options.language];
             wrapperInformation.insertBefore(error, text);
+            wrapperInput.classList.add('error-upload');
             return;
         }
 
@@ -187,11 +190,11 @@ const addNewFile = (event, files=[]) => {
             options.onError({
                 error: new Error("Size is too big").code = "SIZE",
                 file: file,
-                fileSize: getFileSize(file.size),
-                drop: files.length ? true : false
+                fileSize: getFileSize(file.size)
             });
             error.innerHTML = options.textFileTooBig[options.language];
             wrapperInformation.insertBefore(error, text);
+            wrapperInput.classList.add('error-upload');
             return;
         }
 
@@ -200,11 +203,11 @@ const addNewFile = (event, files=[]) => {
                 error: new Error("Total size is too big").code = "TOTAL_SIZE",
                 file: file,
                 fileSize: getFileSize(file.size),
-                totalSize: getRestSize(),
-                drop: files.length ? true : false
+                totalSize: getRestSize()
             });
             error.innerHTML = options.textTooManyFiles[options.language];
             wrapperInformation.insertBefore(error, text);
+            wrapperInput.classList.add('error-upload');
             return;
         }
 
@@ -217,11 +220,11 @@ const addNewFile = (event, files=[]) => {
                     options.onError({
                         error: new Error("Mime Type is not valid").code = "MIME_TYPE",
                         mimeType: extension,
-                        file: file,
-                        drop: files.length ? true : false
+                        file: file
                     });
                     error.innerHTML = options.textFileNotValid[options.language];
                     wrapperInformation.insertBefore(error, text);
+                    wrapperInput.classList.add('error-upload');
                     return;
                 }
 
@@ -249,8 +252,7 @@ const onSuccess = (file) => {
     displayFile();
     options.onSuccess({
         file: file,
-        filesList: filesList,
-        drop: files.length ? true : false
+        filesList: filesList
     });
 }
 
@@ -299,10 +301,16 @@ const displayFile = () => {
  * Remove file from array
  * *******************************************************
  */
-const removeFile = () => {
-    let nodes = Array.prototype.slice.call( wrapperFiles.children );
-    filesList.splice(nodes.indexOf(this.parentNode), 1);
+const removeFile = (e) => {
+    const nodes = Array.prototype.slice.call( wrapperFiles.children );
+    const index = nodes.indexOf(e.target.parentNode);
+    const file = filesList[index];
+    filesList.splice(index, 1);
     displayFile();
+    options.onDelete({
+        file,
+        filesList
+    });
 };
 
 
@@ -312,6 +320,7 @@ const removeFile = () => {
  * *******************************************************
  */
 const cleanError = () => {
+    wrapperInput.classList.remove('error-upload');
     error.innerHTML = '';
 };
 
@@ -421,7 +430,7 @@ const validSize = (file) => {
  * *******************************************************
  */
 const validTotalSize = (file='') => {
-    return Math.round(options.maxTotalFilesSize) >= getTotalSize(file);
+    return Math.round(maxTotalFilesSize) >= getTotalSize(file);
 };
 
 
@@ -431,7 +440,7 @@ const validTotalSize = (file='') => {
  * *******************************************************
  */
 const getRestSize = () => {
-    return getFileSize(options.maxTotalFilesSize - getTotalSize());
+    return getFileSize(maxTotalFilesSize - getTotalSize());
 };
 
 
@@ -485,9 +494,74 @@ const getFormData = (form) => {
 
 
 /**
+ * *******************************************************
+ * Update
+ * *******************************************************
+ */
+const update = settings => {
+
+    if(!Object.keys(settings).length){
+        return;
+    }
+
+    if(Object.keys(settings).length === 1 && settings.language){
+
+        options.language = settings.language;
+
+        cleanError();
+
+        if(filesList.length){
+            text.innerHTML = options.textAfterUpload[options.language];
+        }
+        else{
+            text.innerHTML = options.textBeforeUpload[options.language];
+        }
+
+        if(options.displayRest){
+            rest.innerHTML = getRestSize() +' '+ options.textRest[options.language];
+        }
+
+    }
+    else{
+        reset(settings);
+    }
+
+}
+
+
+/**
+ * *******************************************************
+ * Reset
+ * *******************************************************
+ */
+const reset = (settings={}) => {
+
+    if(wrapperInformation){
+
+        cleanError();
+
+        filesList = [];
+
+        wrapperInformation.remove();
+
+        if(wrapperFiles){
+            wrapperFiles.remove();
+        }
+
+    }
+
+    init(settings);
+
+}
+
+
+
+/**
  * Export functions
  */
 export default {
     init,
+    update,
+    reset,
     getFormData
 };
