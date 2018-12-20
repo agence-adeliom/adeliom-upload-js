@@ -60,6 +60,7 @@ let options = {
 
 let filesList = [];
 let maxTotalFilesSize;
+let wrapperInformation;
 let wrapperFiles;
 let wrapperInput;
 let fileInput;
@@ -284,7 +285,7 @@ const displayFile = () => {
     }
 
     filesList.forEach((file) => {
-        newFile = document.createElement('div');
+        let newFile = document.createElement('div');
         newFile.classList.add('file');
         newFile.innerHTML =
         '<span class="file__delete">Delete</span>'+
@@ -343,7 +344,7 @@ const getFormat = (url, blob, callback) => {
       callback(url, header);
     };
     fileReader.readAsArrayBuffer(blob);
-}
+};
 
 
 /**
@@ -352,7 +353,7 @@ const getFormat = (url, blob, callback) => {
  * *******************************************************
  */
 const getMimeType = (headerString) => {
-    //console.log(headerString);
+    let type;
     switch (headerString) {
         case "89504e47":
             type = ".png";
@@ -384,7 +385,7 @@ const getMimeType = (headerString) => {
             break;
     }
     return type;
-}
+};
 
 
 /**
@@ -526,7 +527,7 @@ const update = settings => {
         reset(settings);
     }
 
-}
+};
 
 
 /**
@@ -552,7 +553,7 @@ const reset = (settings={}) => {
 
     init(settings);
 
-}
+};
 
 
 
