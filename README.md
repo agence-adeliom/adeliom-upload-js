@@ -23,12 +23,12 @@ import Upload from './upload';
 ```
 Upload.init({
     selector: 'input[type="file"]',
-    maxFileSize: 2,
-    maxTotalFilesSize: 10,
-    displayRest: false,
+    maxFileSize: 2, // in Mb
+    maxTotalFilesSize: 10, // in Mb
+    displayRest: false, // to see how many Mb you can still upload
     multiple: true,
-    mimeType: true,
-    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"],
+    mimeType: true, // test the mime type
+    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"], // an array is required
     dropZone: false,
     language: 'fr',
     textBeforeUpload: {
