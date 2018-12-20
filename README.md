@@ -1,6 +1,6 @@
 # Install
 ```
-yarn add https://antoinewaag@bitbucket.org/adeliomgit/adeliom-upload-js.git
+yarn add https://bitbucket.org/adeliomgit/adeliom-upload-js.git
 ```
 
 # HTML
