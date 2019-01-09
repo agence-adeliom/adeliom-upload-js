@@ -3,7 +3,7 @@
  * Polyfill for IE
  * *******************************************************
  */
-import 'babel-polyfill';
+//import 'babel-polyfill';
 
 
 /**
@@ -20,6 +20,7 @@ let options = {
     multiple: true,
     mimeType: true, // test the mime type
     fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"], // an array is required
+    filesList: [],
     dropZone: false,
     language: 'fr',
     textBeforeUpload: {
@@ -76,7 +77,7 @@ let rest;
  * *******************************************************
  */
 
-const init = settings => {
+export const init = settings => {
 
     options = Object.assign(options, settings);
 
@@ -119,6 +120,10 @@ const init = settings => {
 
     if (options.dropZone) {
         initDropZone();
+    }
+
+    if(settings.filesList.length){
+        addNewFile(null, filesList);
     }
 }
 
@@ -493,6 +498,15 @@ const getFormData = (form) => {
     return formData;
 };
 
+/**
+ * *******************************************************
+ * Return files list
+ * *******************************************************
+ */
+const getFiles = () => {
+    return filesList;
+};
+
 
 /**
  * *******************************************************
@@ -564,5 +578,6 @@ export default {
     init,
     update,
     reset,
-    getFormData
+    getFormData,
+    getFiles
 };

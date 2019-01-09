@@ -33,7 +33,9 @@ let options = {
     selector: 'input[type="file"]',
     maxFileSize: 2,
     maxTotalFilesSize: 10,
-    displayRest: false,
+    maxNbFiles: 2,
+    displayRestSize: false,
+    displayRestFiles: false,
     multiple: true,
     mimeType: true,
     fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"],
@@ -63,6 +65,14 @@ let options = {
         'fr': "restants",
         'en': 'left',
     },
+    textFile:{
+        'fr': 'fichiers',
+        'en': 'files'
+    },
+    textTooManyFiles:{
+        'fr': "La limite du nombre de fichier est atteinte",
+        'en': 'Too many files',
+    },
     onSuccess: () => {},
     onError: () => {},
     onDelete: () => {}
@@ -83,7 +93,8 @@ let fileInput;
 let labelInput;
 let text;
 let error;
-let rest;
+let restSize;
+let restFiles;
 
 
 /**
@@ -113,11 +124,18 @@ const init = settings => {
     text.innerHTML = options.textBeforeUpload[options.language];
     wrapperInformation.appendChild(text);
 
-    if(options.displayRest){
-        rest = document.createElement('span');
-        rest.classList.add('w-information__rest')
-        rest.innerHTML = getRestSize() +' '+ options.textRest[options.language];
-        wrapperInformation.appendChild(rest);
+    if(options.displayRestSize){
+        restSize = document.createElement('span');
+        restSize.classList.add('w-information__rest-size')
+        restSize.innerHTML = getRestSize() +' '+ options.textRest[options.language];
+        wrapperInformation.appendChild(restSize);
+    }
+
+    if(options.displayRestFiles){
+        restFiles = document.createElement('span');
+        restFiles.classList.add('w-information__rest-files')
+        restFiles.innerHTML = options.maxNbFiles +' '+ options.textFile[options.language] +' '+ options.textRest[options.language];
+        wrapperInformation.appendChild(restFiles);
     }
 
     error = document.createElement('span');
@@ -183,6 +201,16 @@ const addNewFile = (event, files=[]) => {
     let filesArr = files.length ? files : event.target.files ? event.target.files : null;
 
     if(!filesArr){
+        return;
+    }
+
+    if(options.maxNbFiles && options.maxNbFiles === filesList.length){
+        options.onError({
+            error: new Error("Limit files !").code = "TOO_MANY_FILES"
+        });
+        error.innerHTML = options.textTooManyFiles[options.language];
+        wrapperInformation.insertBefore(error, text);
+        wrapperInput.classList.add('error-upload');
         return;
     }
 
@@ -296,8 +324,12 @@ const displayFile = () => {
         text.innerHTML = options.textBeforeUpload[options.language];
     }
 
-    if(rest){
-        rest.innerHTML = getRestSize() +' '+ options.textRest[options.language];
+    if(restSize){
+        restSize.innerHTML = getRestSize() +' '+ options.textRest[options.language];
+    }
+
+    if(restFiles){
+        restFiles.innerHTML = (options.maxNbFiles - filesList.length) +' '+ options.textFile[options.language] +' '+ options.textRest[options.language];
     }
 
     filesList.forEach((file) => {
@@ -582,7 +614,8 @@ const update = settings => {
 init({
     language: 'fr',
     dropZone: true,
-    displayRest: true,
+    displayRestSize: true,
+    displayRestFiles: true,
     onError: (callback) => {
         console.log(callback);
     },
