@@ -85,6 +85,10 @@ export const init = settings => {
 
     fileInput  = document.querySelector(options.selector);
 
+    if(!fileInput){
+        return;
+    }
+
     wrapperInput = fileInput.parentNode;
 
     labelInput = wrapperInput.querySelector('label');
@@ -493,7 +497,7 @@ const getFileSize = (size) => {
 const getFormData = (form) => {
     let formData = new FormData(form[0]);
     for (let i = 0; i < filesList.length; i++) {
-        formData.append('files[' + i + ']', filesList[i]);
+        formData.append(fileInput.getAttribute("name") + '[' + i + ']', filesList[i]);
     }
     return formData;
 };
