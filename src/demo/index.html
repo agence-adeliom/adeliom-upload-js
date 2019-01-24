@@ -35,6 +35,7 @@ let options = {
     maxFileSize: 2,
     maxTotalFilesSize: 10,
     maxNbFiles: 5,
+    limitCharacters: 10,
     displayRestSize: true,
     displayRestFiles: true,
     displayFilenameError: true,
@@ -500,7 +501,7 @@ const displayFile = () => {
         newFile.classList.add('file');
         newFile.innerHTML =
         '<span class="file__delete"></span>'+
-        '<span class="file__name">'+ file.name +'</span>'+
+        '<span class="file__name">'+ getFileName(file.name) +'</span>'+
         '<span class="file__size">('+ getFileSize(file.size) +')</span>';
         wrapperFiles.appendChild(newFile);
         newFile.querySelector('.file__delete').addEventListener("click", removeFile);
@@ -576,7 +577,6 @@ const getExtension = (filename) => {
  * *******************************************************
  */
 const getMimeType = (headerString) => {
-    //console.log(headerString);
     switch (headerString) {
         case "89504e47":
             type = ".png";
@@ -700,6 +700,21 @@ const getFileSize = (size) => {
         i++;
     }
     return (Math.round(size*100)/100)+' '+fSExt[i];
+};
+
+
+/**
+ * *******************************************************
+ * Return filename
+ * *******************************************************
+ */
+const getFileName = (filename) => {
+    let ext = filename.split('.').pop();
+    let length = filename.length - ext.length - 1;
+    if(length > options.limitCharacters){
+
+    }
+    return filename;
 };
 
 
@@ -871,6 +886,7 @@ init({
     actionAjax: 'upload.php',
     maxFileSize: 10000,
     maxTotalFilesSize: 10000,
+    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".exe"],
     onError: (callback) => {
         console.log(callback);
     },
