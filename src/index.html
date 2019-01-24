@@ -295,7 +295,19 @@ const addNewFile = (event, files=[]) => {
             return;
         }
 
-        if(options.mimeType){
+        currentFiles.push(file);
+
+    });
+
+    if(options.mimeType && filesArr.length === currentErrors.length){
+        displayError();
+    }
+
+    if(options.mimeType){
+
+        let index = parseInt(1 + currentErrors.length);
+
+        currentFiles.forEach((file, i) => {
 
             getFormat(escape(file.name), file, (url, headerString) => {
 
@@ -304,34 +316,26 @@ const addNewFile = (event, files=[]) => {
                 if(options.fileExtensions.length && !isValidMimeType(mimeType)){
                     currentErrors.push({
                         error: new Error("Mime Type is not valid").code = "EXTENSION",
-                        mimeType: extension,
+                        mimeType: getExtension(file.name),
                         file: file,
                         message: options.textFileNotValid[options.language]
                     });
-                }
-                else{
-                    currentFiles.push(file);
+                    currentFiles.splice(currentFiles.findIndex(x => x.name === file.name), 1);
                 }
 
-                if(filesArr.length === parseInt(i + 1)){
+                if(filesArr.length === index){
                     checkFiles();
                 }
 
+                index++;
+
             });
+        });
 
-            return;
-        }
-
-        currentFiles.push(file);
-
-    });
-
-    if(!options.mimeType){
-        checkFiles();
+        return;
     }
-    else if(filesArr.length === currentErrors.length){
-        displayError();
-    }
+
+    checkFiles();
 
 }
 
@@ -435,7 +439,7 @@ const uploadFile = (currentFiles) => {
 
         if (xhr.readyState === 4) {
             if (xhr.status === 200){
-                //console.log(xhr.responseText);
+                console.log(xhr.responseText);
                 displayResult(currentFiles);
             }
             else {
@@ -528,7 +532,7 @@ const removeFile = (e) => {
  */
 const cleanError = () => {
     wrapperInput.classList.remove('error-upload');
-    if(wrapperError){
+    if(wrapperError && wrapperError.parentNode){
         wrapperError.parentNode.removeChild(wrapperError);
     }
 };
@@ -553,6 +557,16 @@ const getFormat = (url, blob, callback) => {
     };
     fileReader.readAsArrayBuffer(blob);
 }
+
+
+/**
+ * *******************************************************
+ * Get extension
+ * *******************************************************
+ */
+const getExtension = (filename) => {
+    return filename.split('.').length > 1 ? '.'+ filename.split('.').pop().toLowerCase() : null;
+};
 
 
 /**
@@ -855,14 +869,15 @@ init({
     language: 'fr',
     actionAjax: 'upload.php',
     mimeType: true,
+    maxTotalFilesSize: 10000,
     onError: (callback) => {
         console.log(callback);
     },
     onSuccess: (callback) => {
-        //console.log(callback);
+        console.log(callback);
     },
     onDelete: (callback) => {
-        //console.log(callback);
+        console.log(callback);
     }
 });
 
