@@ -712,7 +712,7 @@ const getFileName = (filename) => {
     let ext = filename.split('.').pop();
     let length = filename.length - ext.length - 1;
     if(length > options.limitCharacters){
-
+        filename = filename.substr(0, options.limitCharacters) + '(...).' + ext;
     }
     return filename;
 };
@@ -829,7 +829,7 @@ const displayError = () => {
 
             if(options.displayFilenameError){
                 errorSize.forEach((currentError, i) => {
-                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                    text += i ? ', ' + getFileName(currentError.file.name) : ' ' + getFileName(currentError.file.name);
                 });
             }
 
@@ -845,7 +845,7 @@ const displayError = () => {
 
             if(options.displayFilenameError){
                 errorExtension.forEach((currentError, i) => {
-                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                    text += i ? ', ' + getFileName(currentError.file.name) : ' ' + getFileName(currentError.file.name);
                 });
             }
 

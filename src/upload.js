@@ -17,11 +17,12 @@ let options = {
     maxFileSize: 2,
     maxTotalFilesSize: 10,
     maxNbFiles: 5,
+    limitCharacters: 10,
     displayRestSize: true,
     displayRestFiles: true,
     displayFilenameError: true,
     multiple: true,
-    mimeType: true,
+    mimeType: false,
     fileExtensions: [".jpg", ".jpeg", ".png", ".pdf"],
     dropZone: true,
     actionAjax: null,
@@ -482,7 +483,7 @@ const displayFile = () => {
         newFile.classList.add('file');
         newFile.innerHTML =
         '<span class="file__delete"></span>'+
-        '<span class="file__name">'+ file.name +'</span>'+
+        '<span class="file__name">'+ getFileName(file.name) +'</span>'+
         '<span class="file__size">('+ getFileSize(file.size) +')</span>';
         wrapperFiles.appendChild(newFile);
         newFile.querySelector('.file__delete').addEventListener("click", removeFile);
@@ -558,7 +559,6 @@ const getExtension = (filename) => {
  * *******************************************************
  */
 const getMimeType = (headerString) => {
-    //console.log(headerString);
     switch (headerString) {
         case "89504e47":
             type = ".png";
@@ -687,6 +687,21 @@ const getFileSize = (size) => {
 
 /**
  * *******************************************************
+ * Return filename
+ * *******************************************************
+ */
+const getFileName = (filename) => {
+    let ext = filename.split('.').pop();
+    let length = filename.length - ext.length - 1;
+    if(length > options.limitCharacters){
+        filename = filename.substr(0, options.limitCharacters) + '(...).' + ext;
+    }
+    return filename;
+};
+
+
+/**
+ * *******************************************************
  * Return form data
  * *******************************************************
  */
@@ -796,7 +811,7 @@ const displayError = () => {
 
             if(options.displayFilenameError){
                 errorSize.forEach((currentError, i) => {
-                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                    text += i ? ', ' + getFileName(currentError.file.name) : ' ' + getFileName(currentError.file.name);
                 });
             }
 
@@ -812,7 +827,7 @@ const displayError = () => {
 
             if(options.displayFilenameError){
                 errorExtension.forEach((currentError, i) => {
-                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                    text += i ? ', ' + getFileName(currentError.file.name) : ' ' + getFileName(currentError.file.name);
                 });
             }
 
@@ -838,6 +853,9 @@ const displayError = () => {
     });
 
 };
+
+
+
 
 /**
  * Export functions
