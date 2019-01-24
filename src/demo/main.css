@@ -75,6 +75,7 @@ label{
     height: 100%;
     border-radius: 10px;
     background-color: blue;
+    transition: width 0.3s ease-out;
 }
 
 .w-information__error{
