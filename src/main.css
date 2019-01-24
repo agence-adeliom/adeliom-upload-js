@@ -62,3 +62,22 @@ label{
     background: #34495E;
     color: #39D2B4;
 }
+
+.w-progress-bar{
+    height: 30px;
+    width: 300px;
+    border: 1px solid black;
+    border-radius: 10px;
+}
+
+.w-progress-bar__content{
+    width: 0;
+    height: 100%;
+    border-radius: 10px;
+    background-color: blue;
+}
+
+.w-information__error{
+    display: flex;
+    flex-direction: column;
+}

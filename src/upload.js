@@ -190,9 +190,7 @@ const addNewFile = (event, files=[]) => {
                 file: file,
                 drop: files.length ? true : false
             });
-            error.innerHTML = options.textFileNotValid[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
+            addError(options.textFileNotValid[options.language]);
             return;
         }
 
@@ -202,9 +200,7 @@ const addNewFile = (event, files=[]) => {
                 file: file,
                 fileSize: getFileSize(file.size)
             });
-            error.innerHTML = options.textFileTooBig[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
+            addError(options.textFileTooBig[options.language]);
             return;
         }
 
@@ -215,9 +211,7 @@ const addNewFile = (event, files=[]) => {
                 fileSize: getFileSize(file.size),
                 totalSize: getRestSize()
             });
-            error.innerHTML = options.textTooManyFiles[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
+            addError(options.textTooManyFiles[options.language]);
             return;
         }
 
@@ -232,9 +226,7 @@ const addNewFile = (event, files=[]) => {
                         mimeType: extension,
                         file: file
                     });
-                    error.innerHTML = options.textFileNotValid[options.language];
-                    wrapperInformation.insertBefore(error, text);
-                    wrapperInput.classList.add('error-upload');
+                    addError(options.textFileNotValid[options.language]);
                     return;
                 }
 
@@ -574,6 +566,45 @@ const reset = (settings={}) => {
 };
 
 
+/**
+ * *******************************************************
+ * Clear
+ * *******************************************************
+ */
+const clear = () => {
+
+    if(wrapperInformation){
+
+        cleanError();
+
+        filesList = [];
+
+        displayFile();
+
+    }
+
+};
+
+
+/**
+ * *******************************************************
+ * Add Error
+ * *******************************************************
+ */
+const addError = (message) => {
+
+    if(wrapperInformation){
+
+        cleanError();
+
+        error.innerHTML = message;
+        wrapperInformation.insertBefore(error, text);
+        wrapperInput.classList.add('error-upload');
+
+    }
+
+};
+
 
 /**
  * Export functions
@@ -582,6 +613,7 @@ export default {
     init,
     update,
     reset,
+    clear,
     getFormData,
     getFiles
 };

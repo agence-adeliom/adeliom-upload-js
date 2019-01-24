@@ -22,6 +22,7 @@
 
 <script>
 
+var form = document.querySelector('form');
 
 /**
  * *******************************************************
@@ -33,45 +34,63 @@ let options = {
     selector: 'input[type="file"]',
     maxFileSize: 2,
     maxTotalFilesSize: 10,
-    maxNbFiles: 2,
-    displayRestSize: false,
-    displayRestFiles: false,
+    maxNbFiles: 5,
+    displayRestSize: true,
+    displayRestFiles: true,
+    displayFilenameError: true,
     multiple: true,
     mimeType: true,
-    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"],
-    dropZone: false,
+    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf"],
+    dropZone: true,
+    actionAjax: null,
     language: 'fr',
     textBeforeUpload: {
         'fr': 'Aucun fichier sélectionné',
-        'en': 'No file selected',
+        'en': 'No file selected'
     },
     textAfterUpload:{
         'fr': 'Vos fichiers',
-        'en': 'Your files',
-    },
-    textFileNotValid:{
-        'fr': "Votre fichier n'est pas valide !",
-        'en': 'Your file is not valid',
-    },
-    textFileTooBig:{
-        'fr': "Votre fichier est trop lourd !",
-        'en': 'Your file is too big',
-    },
-    textTooManyFiles:{
-        'fr': "Le poids total de vos fichiers est trop lourd !",
-        'en': 'Too many files !',
+        'en': 'Your files'
     },
     textRest:{
         'fr': "restants",
-        'en': 'left',
+        'en': 'left'
     },
     textFile:{
         'fr': 'fichiers',
         'en': 'files'
     },
+    textFileNotValid:{
+        'fr': "Votre fichier n'est pas valide:",
+        'en': 'Your file is not valid'
+    },
+    textMultipleFileNotValid: {
+        'fr': "Vos fichiers ne sont pas valides:",
+        'en': 'Your file are not valid:'
+    },
+    textFileTooBig:{
+        'fr': "Votre fichier est trop lourd:",
+        'en': 'Your file is too big'
+    },
+    textMultipleFileTooBig:{
+        'fr': "Vos fichiers sont trop lourd:",
+        'en': 'Your file is too big'
+    },
+    textTotalFilesSize:{
+        'fr': "Le poids total de vos fichiers est trop lourd !",
+        'en': 'Too many files !'
+    },
     textTooManyFiles:{
+        'fr': "Trop de fichiers téléchargés !",
+        'en': 'Too many files uploaded'
+    },
+    textTotalFiles:{
         'fr': "La limite du nombre de fichier est atteinte",
-        'en': 'Too many files',
+        'en': 'The limit has been reached'
+    },
+    textErrorUpload:{
+        'fr': "Une erreur est survenue, impossible de télécharger le fichier !",
+        'en': 'Cannot upload the file'
     },
     onSuccess: () => {},
     onError: () => {},
@@ -85,16 +104,20 @@ let options = {
  * *******************************************************
  */
 
+let currentFiles = [];
 let filesList = [];
+let currentErrors = [];
 let maxTotalFilesSize;
 let wrapperFiles;
 let wrapperInput;
 let fileInput;
 let labelInput;
-let text;
-let error;
+let wrapperSelected;
+let wrapperError;
 let restSize;
 let restFiles;
+let progressBar;
+let progressBarContent;
 
 
 /**
@@ -123,27 +146,35 @@ const init = settings => {
     wrapperInformation.classList.add('w-information');
     wrapperInput.appendChild(wrapperInformation);
 
-    text = document.createElement('span');
-    text.classList.add('w-information__selected')
-    text.innerHTML = options.textBeforeUpload[options.language];
-    wrapperInformation.appendChild(text);
+    wrapperSelected = document.createElement('div');
+    wrapperSelected.classList.add('w-information__selected');
+    wrapperSelected.innerHTML = options.textBeforeUpload[options.language];
+    wrapperInformation.appendChild(wrapperSelected);
 
     if(options.displayRestSize){
-        restSize = document.createElement('span');
-        restSize.classList.add('w-information__rest-size')
+        restSize = document.createElement('div');
+        restSize.classList.add('w-information__rest-size');
         restSize.innerHTML = getRestSize() +' '+ options.textRest[options.language];
         wrapperInformation.appendChild(restSize);
     }
 
     if(options.displayRestFiles){
-        restFiles = document.createElement('span');
-        restFiles.classList.add('w-information__rest-files')
+        restFiles = document.createElement('div');
+        restFiles.classList.add('w-information__rest-files');
         restFiles.innerHTML = options.maxNbFiles +' '+ options.textFile[options.language] +' '+ options.textRest[options.language];
         wrapperInformation.appendChild(restFiles);
     }
 
-    error = document.createElement('span');
-    error.classList.add('w-information__error');
+    if(options.actionAjax){
+        progressBar = document.createElement('div');
+        progressBar.classList.add('w-progress-bar');
+
+        progressBarContent = document.createElement('div');
+        progressBarContent.classList.add('w-progress-bar__content');
+
+        progressBar.appendChild(progressBarContent);
+        wrapperInput.appendChild(progressBar);
+    }
 
     if(options.multiple){
         fileInput.setAttribute('multiple', true);
@@ -202,92 +233,136 @@ const initDropZone = () => {
  */
 const addNewFile = (event, files=[]) => {
 
+    currentFiles = [];
+    currentErrors = [];
+
     let filesArr = files.length ? files : event.target.files ? event.target.files : null;
 
     if(!filesArr){
         return;
     }
 
-    if(options.maxNbFiles && options.maxNbFiles === filesList.length){
-        options.onError({
-            error: new Error("Limit files !").code = "TOO_MANY_FILES"
+    if(options.maxNbFiles && options.maxNbFiles < filesArr.length){
+        currentErrors.push({
+            error: new Error("Limit files !").code = "TOO_MANY_FILES",
+            message: options.textTooManyFiles[options.language]
         });
-        error.innerHTML = options.textTooManyFiles[options.language];
-        wrapperInformation.insertBefore(error, text);
-        wrapperInput.classList.add('error-upload');
+        displayError();
         return;
     }
 
-    Object.values(filesArr).forEach((file) => {
+    if(options.maxNbFiles && options.maxNbFiles === filesList.length){
+        currentErrors.push({
+            error: new Error("Limit files !").code = "TOO_MANY_FILES",
+            message: options.textTotalFiles[options.language]
+        });
+        displayError();
+        return;
+    }
+
+    Object.values(filesArr).forEach((file, i) => {
 
         const extension = file.name.split('.').length > 1 ? '.'+ file.name.split('.').pop().toLowerCase() : null;
 
         if(options.fileExtensions.length && options.fileExtensions.indexOf(extension) === -1){
-            options.onError({
+            currentErrors.push({
                 error: new Error("Extension is not valid").code = "EXTENSION",
                 mimeType: extension,
                 file: file,
-                drop: files.length ? true : false
+                message: options.textFileNotValid[options.language]
             });
-            error.innerHTML = options.textFileNotValid[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
             return;
         }
 
         if(!validSize(file)){
-            options.onError({
+            currentErrors.push({
                 error: new Error("Size is too big").code = "SIZE",
                 file: file,
-                fileSize: getFileSize(file.size)
+                fileSize: getFileSize(file.size),
+                message: options.textFileTooBig[options.language]
             });
-            error.innerHTML = options.textFileTooBig[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
             return;
         }
 
         if(!validTotalSize(file)){
-            options.onError({
+            currentErrors.push({
                 error: new Error("Total size is too big").code = "TOTAL_SIZE",
                 file: file,
                 fileSize: getFileSize(file.size),
-                totalSize: getRestSize()
+                restSize: getRestSize(),
+                message: options.textTotalFilesSize[options.language]
             });
-            error.innerHTML = options.textTooManyFiles[options.language];
-            wrapperInformation.insertBefore(error, text);
-            wrapperInput.classList.add('error-upload');
             return;
         }
 
         if(options.mimeType){
+
             getFormat(escape(file.name), file, (url, headerString) => {
 
                 const mimeType = getMimeType(headerString);
 
                 if(options.fileExtensions.length && !isValidMimeType(mimeType)){
-                    options.onError({
-                        error: new Error("Mime Type is not valid").code = "MIME_TYPE",
+                    currentErrors.push({
+                        error: new Error("Mime Type is not valid").code = "EXTENSION",
                         mimeType: extension,
-                        file: file
+                        file: file,
+                        message: options.textFileNotValid[options.language]
                     });
-                    error.innerHTML = options.textFileNotValid[options.language];
-                    wrapperInformation.insertBefore(error, text);
-                    wrapperInput.classList.add('error-upload');
-                    return;
+                }
+                else{
+                    currentFiles.push(file);
                 }
 
-                onSuccess(file);
+                if(filesArr.length === parseInt(i + 1)){
+                    checkFiles();
+                }
 
             });
+
             return;
         }
 
-        onSuccess(file);
+        currentFiles.push(file);
 
     });
 
+    if(!options.mimeType){
+        checkFiles();
+    }
+    else if(filesArr.length === currentErrors.length){
+        displayError();
+    }
+
 }
+
+
+/**
+ * *******************************************************
+ * Check file
+ * *******************************************************
+ */
+const checkFiles = () => {
+
+    if(!validTotalSize(null, currentFiles)){
+        currentErrors.push({
+            error: new Error("Total size is too big").code = "TOTAL_SIZE_MULTIPLE",
+            currentFiles: currentFiles,
+            restSize: getRestSize(),
+            message: options.textTotalFilesSize[options.language]
+        });
+        displayError();
+        return;
+    }
+
+    if(currentFiles.length){
+        onSuccess(currentFiles);
+    }
+
+    if(currentErrors.length){
+        displayError();
+    }
+
+};
 
 
 /**
@@ -295,15 +370,94 @@ const addNewFile = (event, files=[]) => {
  * On success
  * *******************************************************
  */
-const onSuccess = (file) => {
-    cleanError();
-    filesList.push(file);
-    displayFile();
-    options.onSuccess({
-        file: file,
-        filesList: filesList
-    });
+const onSuccess = (file, nbFile) => {
+
+    if(!currentErrors.length){
+        cleanError();
+    }
+
+    if(options.actionAjax){
+        uploadFile(currentFiles);
+    }
+    else{
+        displayResult(currentFiles);
+    }
+
 }
+
+
+/**
+ * *******************************************************
+ * Display result
+ * *******************************************************
+ */
+ const displayResult = (currentFiles) => {
+
+    filesList = filesList.concat(currentFiles);
+
+    displayFile();
+
+    options.onSuccess({
+        currentFiles: currentFiles,
+        files: filesList,
+        errors: currentErrors
+    });
+
+}
+
+
+/**
+ * *******************************************************
+ * Upload file
+ * *******************************************************
+ */
+const uploadFile = (currentFiles) => {
+
+    const fd = new FormData();
+
+    fd.append('files', currentFiles);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("POST", "upload.php");
+
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    xhr.upload.addEventListener("progress", function(evt) {
+        if (evt.lengthComputable) {
+            let percentComplete = evt.loaded / evt.total;
+            percentComplete = parseInt(percentComplete * 100);
+            progressBarContent.style.width = percentComplete + '%';
+        }
+    });
+
+    xhr.onreadystatechange = function(data) {
+
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200){
+                //console.log(xhr.responseText);
+                displayResult(currentFiles);
+            }
+            else {
+
+                progressBarContent.style.width = '0%';
+
+                currentErrors.push({
+                    error: new Error("Cannot upload file").code = "UPLOAD",
+                    currentFiles: currentFiles,
+                    message: options.textErrorUpload[options.language]
+                });
+
+                displayError();
+
+            }
+        }
+
+    };
+
+    xhr.send(fd);
+}
+
 
 
 /**
@@ -322,10 +476,10 @@ const displayFile = () => {
     }
 
     if(filesList.length){
-        text.innerHTML = options.textAfterUpload[options.language];
+        wrapperSelected.innerHTML = options.textAfterUpload[options.language];
     }
     else{
-        text.innerHTML = options.textBeforeUpload[options.language];
+        wrapperSelected.innerHTML = options.textBeforeUpload[options.language];
     }
 
     if(restSize){
@@ -340,7 +494,7 @@ const displayFile = () => {
         newFile = document.createElement('div');
         newFile.classList.add('file');
         newFile.innerHTML =
-        '<span class="file__delete">Delete</span>'+
+        '<span class="file__delete"></span>'+
         '<span class="file__name">'+ file.name +'</span>'+
         '<span class="file__size">('+ getFileSize(file.size) +')</span>';
         wrapperFiles.appendChild(newFile);
@@ -374,7 +528,9 @@ const removeFile = (e) => {
  */
 const cleanError = () => {
     wrapperInput.classList.remove('error-upload');
-    error.innerHTML = '';
+    if(wrapperError){
+        wrapperError.parentNode.removeChild(wrapperError);
+    }
 };
 
 
@@ -482,8 +638,8 @@ const validSize = (file) => {
  * Check if total size is valid
  * *******************************************************
  */
-const validTotalSize = (file='') => {
-    return Math.round(maxTotalFilesSize) >= getTotalSize(file);
+const validTotalSize = (file=null, files=filesList) => {
+    return Math.round(maxTotalFilesSize) >= getTotalSize(file, files);
 };
 
 
@@ -492,8 +648,8 @@ const validTotalSize = (file='') => {
  * Return size rest
  * *******************************************************
  */
-const getRestSize = () => {
-    return getFileSize(maxTotalFilesSize - getTotalSize());
+const getRestSize = (files=filesList) => {
+    return getFileSize(maxTotalFilesSize - getTotalSize(null, files));
 };
 
 
@@ -502,11 +658,11 @@ const getRestSize = () => {
  * Return total size of files list
  * *******************************************************
  */
-const getTotalSize = (file) => {
+const getTotalSize = (file, files) => {
     let size = 0;
-    if(filesList.length){
-        for(let i in filesList) {
-            size += filesList[i].size;
+    if(files.length){
+        for(let i in files) {
+            size += files[i].size;
         }
     }
     if(file){
@@ -564,10 +720,10 @@ const update = settings => {
         cleanError();
 
         if(filesList.length){
-            text.innerHTML = options.textAfterUpload[options.language];
+            wrapperSelected.innerHTML = options.textAfterUpload[options.language];
         }
         else{
-            text.innerHTML = options.textBeforeUpload[options.language];
+            wrapperSelected.innerHTML = options.textBeforeUpload[options.language];
         }
 
         if(options.displayRest){
@@ -607,6 +763,86 @@ const update = settings => {
 }
 
 
+/**
+ * *******************************************************
+ * Clear
+ * *******************************************************
+ */
+const clear = () => {
+    if(wrapperInformation){
+        filesList = [];
+        cleanError();
+        displayFile();
+    }
+};
+
+
+/**
+ * *******************************************************
+ * Display Errors
+ * *******************************************************
+ */
+const displayError = () => {
+
+    if(wrapperInformation){
+
+        cleanError();
+
+        wrapperError = document.createElement('div');
+        wrapperError.classList.add('w-information__error');
+
+        const errorSize = currentErrors.filter(x => x.error === 'SIZE');
+
+        if(errorSize.length){
+            let error = document.createElement('span');
+            let text = errorSize.length === 1 ? options.textFileTooBig[options.language] : options.textMultipleFileTooBig[options.language];
+
+            if(options.displayFilenameError){
+                errorSize.forEach((currentError, i) => {
+                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                });
+            }
+
+            error.innerHTML = text;
+            wrapperError.appendChild(error);
+        }
+
+        const errorExtension = currentErrors.filter(x => x.error === 'EXTENSION');
+
+        if(errorExtension.length){
+            let error = document.createElement('span');
+            let text = errorExtension.length === 1 ? options.textFileNotValid[options.language] : options.textMultipleFileNotValid[options.language];
+
+            if(options.displayFilenameError){
+                errorExtension.forEach((currentError, i) => {
+                    text += i ? ', ' + currentError.file.name : ' ' + currentError.file.name;
+                });
+            }
+
+            error.innerHTML = text;
+            wrapperError.appendChild(error);
+        }
+
+        currentErrors.forEach((currentError) => {
+            if(currentError.error !== 'EXTENSION' && currentError.error !== 'SIZE'){
+                let error = document.createElement('span');
+                error.innerHTML = currentError.message;
+                wrapperError.appendChild(error);
+            }
+        });
+
+        wrapperInformation.insertBefore(wrapperError, wrapperSelected);
+
+        wrapperInput.classList.add('error-upload');
+    }
+
+    options.onError({
+        errors: currentErrors
+    });
+
+};
+
+
 
 
 
@@ -617,22 +853,20 @@ const update = settings => {
 
 init({
     language: 'fr',
-    dropZone: true,
-    displayRestSize: true,
-    displayRestFiles: true,
+    actionAjax: 'upload.php',
+    mimeType: true,
     onError: (callback) => {
         console.log(callback);
     },
     onSuccess: (callback) => {
-        console.log(callback);
+        //console.log(callback);
     },
     onDelete: (callback) => {
-        console.log(callback);
+        //console.log(callback);
     }
 });
 
 
-var form = document.querySelector('form');
 form.addEventListener('submit',function(e){
     e.preventDefault();
 
@@ -648,6 +882,7 @@ form.addEventListener('submit',function(e){
     // send fd as data to your post/ajax request
 
 });
+
 
 </script>
 
