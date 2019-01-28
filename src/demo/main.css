@@ -64,10 +64,17 @@ label{
 }
 
 .w-progress-bar{
+    opacity: 0;
+    pointer-events: none;
     height: 30px;
     width: 300px;
     border: 1px solid black;
     border-radius: 10px;
+    transition: opacity 300ms ease-in-out;
+}
+
+.w-progress-bar.active{
+    opacity: 1;
 }
 
 .w-progress-bar__content{

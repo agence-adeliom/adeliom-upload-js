@@ -42,7 +42,7 @@ let options = {
     multiple: true,
     mimeType: false,
     fileExtensions: [".jpg", ".jpeg", ".png", ".pdf"],
-    dropZone: true,
+    dropZone: false,
     actionAjax: null,
     language: 'fr',
     textBeforeUpload: {
@@ -109,8 +109,10 @@ let currentFiles = [];
 let filesList = [];
 let currentErrors = [];
 let maxTotalFilesSize;
+let wrapperInformation;
 let wrapperFiles;
 let wrapperInput;
+let filesContent;
 let fileInput;
 let labelInput;
 let wrapperSelected;
@@ -143,28 +145,36 @@ const init = settings => {
 
     labelInput = wrapperInput.querySelector('label');
 
-    wrapperInformation = document.createElement('div');
-    wrapperInformation.classList.add('w-information');
-    wrapperInput.appendChild(wrapperInformation);
+    if(options.displayRestSize || options.displayRestFiles){
 
-    wrapperSelected = document.createElement('div');
-    wrapperSelected.classList.add('w-information__selected');
+        wrapperInformation = document.createElement('div');
+        wrapperInformation.classList.add('w-information');
+        wrapperInput.appendChild(wrapperInformation);
+
+        if(options.displayRestSize){
+            restSize = document.createElement('div');
+            restSize.classList.add('w-information__size');
+            restSize.innerHTML = getRestSize() +' '+ options.textRest[options.language];
+            wrapperInformation.appendChild(restSize);
+        }
+
+        if(options.displayRestFiles){
+            restFiles = document.createElement('div');
+            restFiles.classList.add('w-information__files');
+            restFiles.innerHTML = options.maxNbFiles +' '+ options.textFile[options.language] +' '+ options.textRest[options.language];
+            wrapperInformation.appendChild(restFiles);
+        }
+
+    }
+
+    wrapperFiles = document.createElement('div');
+    wrapperFiles.classList.add('w-files');
+    wrapperInput.appendChild(wrapperFiles);
+
+    wrapperSelected = document.createElement('span');
+    wrapperSelected.classList.add('w-files__selected');
     wrapperSelected.innerHTML = options.textBeforeUpload[options.language];
-    wrapperInformation.appendChild(wrapperSelected);
-
-    if(options.displayRestSize){
-        restSize = document.createElement('div');
-        restSize.classList.add('w-information__rest-size');
-        restSize.innerHTML = getRestSize() +' '+ options.textRest[options.language];
-        wrapperInformation.appendChild(restSize);
-    }
-
-    if(options.displayRestFiles){
-        restFiles = document.createElement('div');
-        restFiles.classList.add('w-information__rest-files');
-        restFiles.innerHTML = options.maxNbFiles +' '+ options.textFile[options.language] +' '+ options.textRest[options.language];
-        wrapperInformation.appendChild(restFiles);
-    }
+    wrapperFiles.appendChild(wrapperSelected);
 
     if(options.actionAjax){
         progressBar = document.createElement('div');
@@ -418,6 +428,15 @@ const onSuccess = (file, nbFile) => {
  */
 const uploadFile = (currentFiles) => {
 
+    if(progressBar){
+        wrapperInput.classList.add('uploading');
+        progressBar.classList.add('active');
+        progressBarContent.style.width = '0%';
+    }
+    else{
+        return;
+    }
+
     const fd = new FormData();
 
     for (let i = 0; i < currentFiles.length; i++) {
@@ -431,11 +450,22 @@ const uploadFile = (currentFiles) => {
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
     xhr.upload.addEventListener("progress", function(evt) {
+
         if (evt.lengthComputable) {
+
             let percentComplete = evt.loaded / evt.total;
             percentComplete = parseInt(percentComplete * 100);
             progressBarContent.style.width = percentComplete + '%';
+
+            if(percentComplete === 100){
+                setTimeout(() => {
+                    wrapperInput.classList.remove('uploading');
+                    progressBar.classList.remove('active');
+                }, 500);
+            }
+
         }
+
     });
 
     xhr.onreadystatechange = function(data) {
@@ -472,13 +502,14 @@ const uploadFile = (currentFiles) => {
  * *******************************************************
  */
 const displayFile = () => {
-    if(!wrapperFiles){
-        wrapperFiles = document.createElement('div');
-        wrapperFiles.classList.add('w-files');
-        wrapperInput.appendChild(wrapperFiles);
+
+    if(!filesContent){
+        filesContent = document.createElement('div');
+        filesContent.classList.add('w-files__content');
+        wrapperFiles.appendChild(filesContent);
     }
     else{
-        wrapperFiles.innerHTML = '';
+        filesContent.innerHTML = '';
     }
 
     if(filesList.length){
@@ -503,7 +534,7 @@ const displayFile = () => {
         '<span class="file__delete"></span>'+
         '<span class="file__name">'+ getFileName(file.name) +'</span>'+
         '<span class="file__size">('+ getFileSize(file.size) +')</span>';
-        wrapperFiles.appendChild(newFile);
+        filesContent.appendChild(newFile);
         newFile.querySelector('.file__delete').addEventListener("click", removeFile);
     });
 };
@@ -515,7 +546,7 @@ const displayFile = () => {
  * *******************************************************
  */
 const removeFile = (e) => {
-    const nodes = Array.prototype.slice.call( wrapperFiles.children );
+    const nodes = Array.prototype.slice.call( filesContent.children );
     const index = nodes.indexOf(e.target.parentNode);
     const file = filesList[index];
     filesList.splice(index, 1);
