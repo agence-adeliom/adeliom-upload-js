@@ -1,4 +1,4 @@
 /node_modules
 /.idea
 
-/src/demo/uploads/*
+/demo/uploads/*
