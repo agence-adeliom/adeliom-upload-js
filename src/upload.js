@@ -86,7 +86,6 @@ let maxTotalFilesSize;
 let wrapperFiles;
 let wrapperInput;
 let wrapperInformation;
-let newFile;
 let filesContent;
 let fileInput;
 let labelInput;
@@ -503,7 +502,7 @@ const displayFile = () => {
     }
 
     filesList.forEach((file) => {
-        newFile = document.createElement('div');
+        let newFile = document.createElement('div');
         newFile.classList.add('file');
         newFile.innerHTML =
         '<span class="file__delete"></span>'+
