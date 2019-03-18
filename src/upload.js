@@ -122,7 +122,6 @@ const init = settings => {
 
     wrapperInput = document.createElement('div');
     wrapperInput.classList.add('w-input');
-    wrapperInput.appendChild(fileInput);
 
     parentInput.replaceChild(wrapperInput, fileInput);
     wrapperInput.appendChild(fileInput);
