@@ -85,6 +85,7 @@ let currentErrors = [];
 let maxTotalFilesSize;
 let wrapperFiles;
 let wrapperInput;
+let wrapperInformation;
 let filesContent;
 let fileInput;
 let labelInput;
