@@ -86,6 +86,7 @@ let maxTotalFilesSize;
 let wrapperFiles;
 let wrapperInput;
 let wrapperInformation;
+let newFile;
 let filesContent;
 let fileInput;
 let labelInput;
