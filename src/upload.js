@@ -84,6 +84,7 @@ let filesList = [];
 let currentErrors = [];
 let maxTotalFilesSize;
 let wrapperFiles;
+let parentInput;
 let wrapperInput;
 let wrapperInformation;
 let filesContent;
@@ -115,15 +116,22 @@ const init = settings => {
         return;
     }
 
-    wrapperInput = fileInput.parentNode;
+    parentInput = fileInput.parentNode;
 
-    labelInput = wrapperInput.querySelector('label');
+    labelInput = parentInput.querySelector('label');
+
+    wrapperInput = document.createElement('div');
+    wrapperInput.classList.add('w-input');
+    wrapperInput.appendChild(fileInput);
+
+    parentInput.replaceChild(wrapperInput, fileInput);
+    wrapperInput.appendChild(fileInput);
 
     if(options.displayRestSize || options.displayRestFiles){
 
         wrapperInformation = document.createElement('div');
         wrapperInformation.classList.add('w-information');
-        wrapperInput.appendChild(wrapperInformation);
+        parentInput.appendChild(wrapperInformation);
 
         if(options.displayRestSize){
             restSize = document.createElement('div');
@@ -143,7 +151,7 @@ const init = settings => {
 
     wrapperFiles = document.createElement('div');
     wrapperFiles.classList.add('w-files');
-    wrapperInput.appendChild(wrapperFiles);
+    parentInput.appendChild(wrapperFiles);
 
     wrapperSelected = document.createElement('span');
     wrapperSelected.classList.add('w-files__selected');
@@ -158,7 +166,7 @@ const init = settings => {
         progressBarContent.classList.add('w-progress-bar__content');
 
         progressBar.appendChild(progressBarContent);
-        wrapperInput.appendChild(progressBar);
+        parentInput.appendChild(progressBar);
     }
 
     if(options.multiple){
@@ -186,25 +194,25 @@ const initDropZone = () => {
 
     labelInput.addEventListener('dragover', function() {
         event.preventDefault(); // prevent default to allow drop
-        wrapperInput.classList.add('is-dragover');
+        parentInput.classList.add('is-dragover');
     }, false);
 
     labelInput.addEventListener('dragenter', function() {
-        wrapperInput.classList.add('is-dragover');
+        parentInput.classList.add('is-dragover');
     }, false);
 
     labelInput.addEventListener('dragleave', function() {
-        wrapperInput.classList.remove('is-dragover');
+        parentInput.classList.remove('is-dragover');
     }, false);
 
     labelInput.addEventListener('dragend', function() {
-        wrapperInput.classList.remove('is-dragover');
+        parentInput.classList.remove('is-dragover');
     }, false);
 
     labelInput.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        wrapperInput.classList.remove('is-dragover');
+        parentInput.classList.remove('is-dragover');
         droppedFiles = e.dataTransfer.files;
         addNewFile(e, droppedFiles);
     }, false);
@@ -403,7 +411,7 @@ const onSuccess = (file, nbFile) => {
 const uploadFile = (currentFiles) => {
 
     if(progressBar){
-        wrapperInput.classList.add('uploading');
+        parentInput.classList.add('uploading');
         progressBar.classList.add('active');
         progressBarContent.style.width = '0%';
     }
@@ -433,7 +441,7 @@ const uploadFile = (currentFiles) => {
 
             if(percentComplete === 100){
                 setTimeout(() => {
-                    wrapperInput.classList.remove('uploading');
+                    parentInput.classList.remove('uploading');
                     progressBar.classList.remove('active');
                 }, 500);
             }
@@ -538,7 +546,7 @@ const removeFile = (e) => {
  * *******************************************************
  */
 const cleanError = () => {
-    wrapperInput.classList.remove('error-upload');
+    parentInput.classList.remove('error-upload');
     if(wrapperError && wrapperError.parentNode){
         wrapperError.parentNode.removeChild(wrapperError);
     }
@@ -552,14 +560,14 @@ const cleanError = () => {
  */
 const getFormat = (url, blob, callback) => {
     var fileReader = new FileReader();
-    wrapperInput.classList.add('loading');
+    parentInput.classList.add('loading');
     fileReader.onloadend = function(e) {
       var arr = (new Uint8Array(e.target.result)).subarray(0, 4);
       var header = "";
       for (var i = 0; i < arr.length; i++) {
         header += arr[i].toString(16);
       }
-      wrapperInput.classList.remove('loading');
+      parentInput.classList.remove('loading');
       callback(url, header);
     };
     fileReader.readAsArrayBuffer(blob);
@@ -878,7 +886,7 @@ const displayError = () => {
 
         wrapperInformation.insertBefore(wrapperError, wrapperSelected);
 
-        wrapperInput.classList.add('error-upload');
+        parentInput.classList.add('error-upload');
     }
 
     options.onError({

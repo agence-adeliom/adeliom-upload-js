@@ -1,5 +1,5 @@
 import Upload from '../src/upload.js';
-
+alert('test');
 var form = document.querySelector('form');
 
 Upload.init({
