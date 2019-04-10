@@ -1,7 +1,7 @@
 .input-file-container {
     position: relative;
 }
-.input-file-trigger {
+.w-input__upload {
     display: block;
     padding: 14px 45px;
     background: #39D2B4;
@@ -19,10 +19,10 @@
     cursor: pointer;
     left: -9999px;
 }
-.input-file:hover + .input-file-trigger,
-.input-file:focus + .input-file-trigger,
-.input-file-trigger:hover,
-.input-file-trigger:focus {
+.input-file:hover + .w-input__upload,
+.input-file:focus + .w-input__upload,
+.w-input__upload:hover,
+.w-input__upload:focus {
     background: #34495E;
     color: #39D2B4;
 }
@@ -45,20 +45,20 @@
 }
 
 
-.error-upload label{
+.error-upload .w-input__upload{
     border: 2px solid red;
 }
 
-.loading label{
+.loading .w-input__upload{
     background-color: #34495E !important;
 }
 
-label{
+.w-input__upload{
     height: 200px;
     width: 200px;
 }
 
-.is-dragover  label {
+.is-dragover  .w-input__upload {
     background: #34495E;
     color: #39D2B4;
 }

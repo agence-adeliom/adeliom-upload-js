@@ -2,7 +2,8 @@ import Upload from '../src/upload.js';
 
 var form = document.querySelector('form');
 
-Upload.init({
+var settings = {
+    selector: '.input-test',
     language: 'fr',
     actionAjax: 'upload.php',
     maxFileSize: 10000,
@@ -17,21 +18,23 @@ Upload.init({
     onDelete: (callback) => {
         console.log(callback);
     }
-});
+}
+
+Upload.init(settings);
 
 
-form.addEventListener('submit',function(e){
-    e.preventDefault();
+// form.addEventListener('submit',function(e){
+//     e.preventDefault();
 
-    reset();
+//     reset();
 
-    let fd = getFormData(form);
+//     let fd = getFormData(form);
 
-    for (var value of fd.values()) {
-        console.log(value);
-    }
+//     for (var value of fd.values()) {
+//         console.log(value);
+//     }
 
 
-    // send fd as data to your post/ajax request
+//     // send fd as data to your post/ajax request
 
-});
+// });

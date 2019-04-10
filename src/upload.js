@@ -16,9 +16,13 @@ let options = {
     multiple: true,
     mimeType: false,
     fileExtensions: [".jpg", ".jpeg", ".png", ".pdf"],
-    dropZone: false,
+    dropZone: true,
     actionAjax: null,
     language: 'fr',
+    textBtnUpload: {
+        'fr': 'Ajouter un fichier',
+        'en': 'Add a file'
+    },
     textBeforeUpload: {
         'fr': 'Aucun fichier sélectionné',
         'en': 'No file selected'
@@ -89,7 +93,8 @@ let wrapperInput;
 let wrapperInformation;
 let filesContent;
 let fileInput;
-let labelInput;
+let wrapperBtnUpload;
+let btnUpload;
 let wrapperSelected;
 let wrapperError;
 let restSize;
@@ -118,13 +123,19 @@ const init = settings => {
 
     parentInput = fileInput.parentNode;
 
-    labelInput = parentInput.querySelector('label');
-
     wrapperInput = document.createElement('div');
     wrapperInput.classList.add('w-input');
 
+    wrapperBtnUpload = document.createElement('div');
+    wrapperBtnUpload.classList.add('w-input__upload');
+
+    btnUpload = document.createElement('span');
+    btnUpload.innerHTML = options.textBtnUpload[options.language];
+
     parentInput.replaceChild(wrapperInput, fileInput);
     wrapperInput.appendChild(fileInput);
+    wrapperInput.appendChild(wrapperBtnUpload);
+    wrapperBtnUpload.appendChild(btnUpload);
 
     if(options.displayRestSize || options.displayRestFiles){
 
@@ -191,29 +202,33 @@ const init = settings => {
 const initDropZone = () => {
     let droppedFiles = false;
 
-    labelInput.addEventListener('dragover', function() {
+    wrapperBtnUpload.addEventListener('dragover', function() {
         event.preventDefault(); // prevent default to allow drop
         parentInput.classList.add('is-dragover');
     }, false);
 
-    labelInput.addEventListener('dragenter', function() {
+    wrapperBtnUpload.addEventListener('dragenter', function() {
         parentInput.classList.add('is-dragover');
     }, false);
 
-    labelInput.addEventListener('dragleave', function() {
+    wrapperBtnUpload.addEventListener('dragleave', function() {
         parentInput.classList.remove('is-dragover');
     }, false);
 
-    labelInput.addEventListener('dragend', function() {
+    wrapperBtnUpload.addEventListener('dragend', function() {
         parentInput.classList.remove('is-dragover');
     }, false);
 
-    labelInput.addEventListener('drop', function(e) {
+    wrapperBtnUpload.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
         parentInput.classList.remove('is-dragover');
         droppedFiles = e.dataTransfer.files;
         addNewFile(e, droppedFiles);
+    }, false);
+
+    wrapperBtnUpload.addEventListener('click', function() {
+        fileInput.click();
     }, false);
 };
 
@@ -883,7 +898,7 @@ const displayError = () => {
             }
         });
 
-        wrapperInformation.insertBefore(wrapperError, wrapperSelected);
+        wrapperInformation.appendChild(wrapperError);
 
         parentInput.classList.add('error-upload');
     }
