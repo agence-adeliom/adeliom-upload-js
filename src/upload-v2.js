@@ -23,6 +23,10 @@ export default class Upload {
             dropZone: false,
             actionAjax: null,
             language: 'fr',
+            textBtnUpload: {
+                'fr': 'Ajouter un fichier',
+                'en': 'Add a file'
+            },
             textBeforeUpload: {
                 'fr': 'Aucun fichier sélectionné',
                 'en': 'No file selected'
@@ -91,7 +95,8 @@ export default class Upload {
         this.wrapperInformation;
         this.filesContent;
         this.fileInput;
-        this.labelInput;
+        this.wrapperBtnUpload;
+        this.btnUpload;
         this.wrapperSelected;
         this.wrapperError;
         this.restSize;
@@ -121,10 +126,14 @@ export default class Upload {
 
         this.parentInput = this.fileInput.parentNode;
 
-        this.labelInput = this.parentInput.querySelector('label');
-
         this.wrapperInput = document.createElement('div');
         this.wrapperInput.classList.add('w-input');
+
+        this.wrapperBtnUpload = document.createElement('div');
+        this.wrapperBtnUpload.classList.add('w-input__upload');
+
+        this.btnUpload = document.createElement('span');
+        this.btnUpload.innerHTML = options.textBtnUpload[options.language];
 
         this.parentInput.replaceChild(this.wrapperInput, this.fileInput);
         this.wrapperInput.appendChild(this.fileInput);
@@ -194,30 +203,35 @@ export default class Upload {
     initDropZone = () => {
         let droppedFiles = false;
 
-        this.labelInput.addEventListener('dragover', function() {
+        this.wrapperBtnUpload.addEventListener('dragover', function() {
             event.preventDefault(); // prevent default to allow drop
             this.parentInput.classList.add('is-dragover');
         }, false);
 
-        this.labelInput.addEventListener('dragenter', function() {
+        this.wrapperBtnUpload.addEventListener('dragenter', function() {
             this.parentInput.classList.add('is-dragover');
         }, false);
 
-        this.labelInput.addEventListener('dragleave', function() {
+        this.wrapperBtnUpload.addEventListener('dragleave', function() {
             this.parentInput.classList.remove('is-dragover');
         }, false);
 
-        this.labelInput.addEventListener('dragend', function() {
+        this.wrapperBtnUpload.addEventListener('dragend', function() {
             this.parentInput.classList.remove('is-dragover');
         }, false);
 
-        this.labelInput.addEventListener('drop', function(e) {
+        this.wrapperBtnUpload.addEventListener('drop', function(e) {
             e.preventDefault();
             e.stopPropagation();
             this.parentInput.classList.remove('is-dragover');
             droppedFiles = e.dataTransfer.files;
             addNewFile(e, droppedFiles);
         }, false);
+
+        this.wrapperBtnUpload.addEventListener('click', function() {
+            fileInput.click();
+        }, false);
+
     };
 
 
@@ -886,7 +900,7 @@ export default class Upload {
                 }
             });
 
-            this.wrapperInformation.insertBefore(wrapperError, wrapperSelected);
+            this.wrapperInformation.appendChild(wrapperError);
 
             this.parentInput.classList.add('error-upload');
         }
