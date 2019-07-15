@@ -3,14 +3,13 @@
 yarn add https://bitbucket.org/adeliomgit/adeliom-upload-js.git
 ```
 
-# HTML
+# HTML (only an input is needed)
 
 ```
 <div>
-    <input type="file" name="files[]" id="test">
     <label for="test">Select a file...</label>
+    <input type="file" name="files[]" id="test">
 </div>
-
 ```
 
 # Import
@@ -21,59 +20,105 @@ import Upload from './upload';
 # Available options (by default)
 
 ```
-Upload.init({
+const uploadField = {
     selector: 'input[type="file"]',
-    maxFileSize: 2, // in Mb
-    maxTotalFilesSize: 10, // in Mb
-    displayRest: false, // to see how many Mb you can still upload
+    maxFileSize: 2,
+    maxTotalFilesSize: 10,
+    maxNbFiles: 5,
+    limitCharacters: 10,
+    displayMaxFileSize: true,
+    displayRestSize: true,
+    displayRestFiles: true,
+    displayFilenameError: true,
     multiple: true,
-    mimeType: true, // test the mime type
-    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".xlsx"], // an array is required
+    mimeType: false,
+    fileExtensions: [".jpg", ".jpeg", ".png", ".pdf"],
     dropZone: false,
+    actionAjax: null,
     language: 'fr',
-    textBeforeUpload: {
-        'fr': 'Aucun fichier sélectionné',
-        'en': 'No file selected',
-    },
-    textAfterUpload:{
-        'fr': 'Vos fichiers',
-        'en': 'Your files',
-    },
-    textFileNotValid:{
-        'fr': "Votre fichier n'est pas valide !",
-        'en': 'Your file is not valid',
-    },
-    textFileTooBig:{
-        'fr': "Votre fichier est trop lourd !",
-        'en': 'Your file is too big',
-    },
-    textTooManyFiles:{
-        'fr': "Le poids total de vos fichiers est trop lourd !",
-        'en': 'Too many files !',
-    },
-    textRest:{
-        'fr': "restants",
-        'en': 'left',
-    },
-    onError: (callback) => {
-        console.log(callback);
-    },
-    onSuccess: (callback) => {
-        console.log(callback);
-    },
-    onDelete: (callback) => {
-        console.log(callback);
+    languages: {},
+    customContentOnly: false,
+    customContent: ''
+}
+```
+
+# Add a new language or update one
+```
+// If you want to add a new language, create a constant with all the keys
+const ru = {
+    textBtnUpload: 'Ajouter un fichier',
+    textBeforeUpload: 'Aucun fichier sélectionné',
+    textAfterUpload: 'Vos fichiers',
+    textSizeRest: '{{number}} restant',
+    textFileRest: '{{number}} fichier{{s}} restant{{s}}',
+    textMaxFileSize: '{{number}} maximum par fichier',
+    textFileNotValid: "Votre fichier n'est pas valide:",
+    textMultipleFileNotValid: "Vos fichiers ne sont pas valides:",
+    textFileTooBig: "Votre fichier est trop lourd:",
+    textMultipleFileTooBig: "Vos fichiers sont trop lourd:",
+    textTotalFilesSize: "Le poids total de vos fichiers est trop lourd.",
+    textTooManyFiles: "Trop de fichiers téléchargés !",
+    textTotalFiles: "La limite du nombre de fichier est atteinte",
+    textErrorsUpload: "Une erreur est survenue, impossible de télécharger le fichier."
+};
+
+// If you want to update a language you can specify which key you want to override
+const settings = {
+    languages: {
+        ru: ru,
+        fr: {
+            textBtnUpload: 'This text is updated'
+        }
     }
+}
+```
+
+# Init Class
+
+```
+const uploadField = new Upload(settings);
+uploadField.init();
+```
+
+# Listener
+```
+// Need to be called before the init class
+uploadField.on('init', (response) => {
+    console.log(response)
 });
 
+// when a file is uploaded
+uploadField.on('success', (response) => {
+    console.log(response)
+});
+
+// when a file is deleted
+uploadField.on('delete', (response) => {
+    console.log(response)
+});
+
+// when there is an error (file too big, too many files...)
+uploadField.on('error', (response) => {
+    console.log(response)
+});
 ```
 
-# Other functions
+# Methods
 ```
-Upload.reset();
+uploadField.reset();
 
-Upload.update({
+uploadField.update({
     language: 'en',
     ...
 });
+```
+
+# Getter
+```
+uploadField.files;
+```
+
+# Setter
+```
+uploadField.language = 'en';
 ```

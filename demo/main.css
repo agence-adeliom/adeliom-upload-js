@@ -89,3 +89,10 @@
     display: flex;
     flex-direction: column;
 }
+
+.file__delete{
+    display: block;
+    width: 20px;
+    height: 20px;
+    background: red;
+}
