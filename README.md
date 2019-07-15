@@ -3,9 +3,10 @@
 yarn add https://bitbucket.org/adeliomgit/adeliom-upload-js.git
 ```
 
-# HTML (only an input is needed)
+# HTML
 
 ```
+// Only an input is needed, html content is generated
 <div>
     <label for="test">Select a file...</label>
     <input type="file" name="files[]" id="test">
