@@ -1,4 +1,4 @@
-import Upload from '../src/upload.js';
+import Upload from '../src/upload-v2.js';
 
 var form = document.querySelector('form');
 
