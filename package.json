@@ -1,6 +1,6 @@
 {
-  "name": "Upload",
-  "version": "1.0.0",
+  "name": "adeliom-upload-js",
+  "version": "2.0.0",
   "description": "Upload field",
   "main": "src/upload.js",
   "repository": "https://antoinewaag@bitbucket.org/adeliomgit/adeliom-upload-js.git",
@@ -11,13 +11,11 @@
   },
   "keywords": [
     "js",
-    "lazyload"
+    "upload"
   ],
   "dependencies": {
-    "babel-polyfill": "^6.26.0",
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "@babel/register": "^7.0.0"
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/register": "^7.5.5"
   }
 }

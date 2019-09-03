@@ -1,6 +1,9 @@
 import {fr} from './languages/fr.js';
 import {en} from './languages/en.js';
 
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+
 class Emitter {
 
     constructor() {
@@ -25,7 +28,7 @@ class Emitter {
 
 }
 
-  
+
 export default class Upload extends Emitter {
 
     constructor(settings){
@@ -79,7 +82,7 @@ export default class Upload extends Emitter {
          * *******************************************************
          */
         const keysLng = Object.keys(this.options.languages);
-        
+
         if(keysLng.length){
             keysLng.forEach((lng, i) => {
                 if(!this.text[lng]){
@@ -128,7 +131,7 @@ export default class Upload extends Emitter {
      * *******************************************************
      */
 
-    init = () => {
+    init(){
 
         this.maxTotalFilesSize = this.options.maxTotalFilesSize * 1048576;
 
@@ -220,7 +223,7 @@ export default class Upload extends Emitter {
             this.fileInput.setAttribute('accept', this.options.fileExtensions);
         }
 
-        this.fileInput.addEventListener("change", this._addNewFile);
+        this.fileInput.addEventListener("change", this._addNewFile.bind(this));
 
         this.wrapperBtnUpload.addEventListener('click', () => {
             this.fileInput.click();
@@ -230,7 +233,7 @@ export default class Upload extends Emitter {
             this._initDropZone();
             return;
         }
-        
+
         this.emit("init", {
             init: true
         });
@@ -242,8 +245,8 @@ export default class Upload extends Emitter {
      * Drop Zone
      * *******************************************************
      */
-    _initDropZone = () => {
-        
+    _initDropZone(){
+
         let droppedFiles = false;
 
         this.wrapperBtnUpload.addEventListener('dragover', () => {
@@ -284,8 +287,8 @@ export default class Upload extends Emitter {
      * Add a new file in array
      * *******************************************************
      */
-    _addNewFile = (event, files=[]) => {
-        
+    _addNewFile(event, files=[]){
+
         this.currentFiles = [];
         this.currentErrors = [];
 
@@ -398,7 +401,7 @@ export default class Upload extends Emitter {
      * Check file
      * *******************************************************
      */
-    _checkFiles = () => {
+    _checkFiles(){
 
         if(!this._validTotalSize(null, this.currentFiles)){
             this.currentErrors.push({
@@ -427,7 +430,7 @@ export default class Upload extends Emitter {
      * On success
      * *******************************************************
      */
-    _onSuccess = () => {
+    _onSuccess() {
 
         if(!this.currentErrors.length){
             this._cleanError();
@@ -448,7 +451,7 @@ export default class Upload extends Emitter {
      * Display result
      * *******************************************************
      */
-    _displayResult = (currentFiles) => {
+    _displayResult(currentFiles){
 
         this.filesList = this.filesList.concat(currentFiles);
 
@@ -468,7 +471,7 @@ export default class Upload extends Emitter {
      * Upload file
      * *******************************************************
      */
-    _uploadFile = (currentFiles) => {
+    _uploadFile(currentFiles){
 
         if(this.progressBar){
             this.parentInput.classList.add('uploading');
@@ -543,8 +546,8 @@ export default class Upload extends Emitter {
      * Display files list
      * *******************************************************
      */
-    _displayFile = () => {
-        
+    _displayFile(){
+
         if(!this.filesContent){
             this.filesContent = document.createElement('div');
             this.filesContent.classList.add('w-files__content');
@@ -573,11 +576,11 @@ export default class Upload extends Emitter {
             let newFile = document.createElement('div');
             newFile.classList.add('file');
             newFile.innerHTML =
-            '<span class="file__delete"></span>'+
-            '<span class="file__name">'+ this._getFileName(file.name) +'</span>'+
-            '<span class="file__size">('+ this._getFileSize(file.size) +')</span>';
+                '<span class="file__delete"></span>'+
+                '<span class="file__name">'+ this._getFileName(file.name) +'</span>'+
+                '<span class="file__size">('+ this._getFileSize(file.size) +')</span>';
             this.filesContent.appendChild(newFile);
-            newFile.querySelector('.file__delete').addEventListener("click", this._removeFile);
+            newFile.querySelector('.file__delete').addEventListener("click", this._removeFile.bind(this));
         });
     };
 
@@ -587,8 +590,8 @@ export default class Upload extends Emitter {
      * Remove file from array
      * *******************************************************
      */
-    _removeFile = (e) => {
-        const nodes = Array.prototype.slice.call( this.filesContent.children );
+    _removeFile(e){
+        const nodes = Array.prototype.slice.call(this.filesContent.children);
         const index = nodes.indexOf(e.target.parentNode);
         const file = this.filesList[index];
         this.filesList.splice(index, 1);
@@ -605,7 +608,7 @@ export default class Upload extends Emitter {
      * Clean error
      * *******************************************************
      */
-    _cleanError = () => {
+    _cleanError(){
         if(this.parentInput){
             this.parentInput.classList.remove('error-upload');
         }
@@ -620,7 +623,7 @@ export default class Upload extends Emitter {
      * Get format
      * *******************************************************
      */
-    _getFormat = (url, blob, callback) => {
+    _getFormat(url, blob, callback){
         var fileReader = new FileReader();
         this.parentInput.classList.add('loading');
         fileReader.onloadend = (e) => {
@@ -641,7 +644,7 @@ export default class Upload extends Emitter {
      * Get extension
      * *******************************************************
      */
-    _getExtension = (filename) => {
+    _getExtension(filename){
         return filename.split('.').length > 1 ? '.'+ filename.split('.').pop().toLowerCase() : null;
     };
 
@@ -651,7 +654,7 @@ export default class Upload extends Emitter {
      * Get mime type
      * *******************************************************
      */
-    _getMimeType = (headerString) => {
+    _getMimeType(headerString){
         let type = "";
         switch (headerString) {
             case "89504e47":
@@ -692,7 +695,7 @@ export default class Upload extends Emitter {
      * Return if Mime Type is correct
      * *******************************************************
      */
-    _isValidMimeType = (mimeType) => {
+    _isValidMimeType(mimeType){
         if(Array.isArray(mimeType)){
             for(let i = 0; i <= mimeType.length; i++){
                 if(this.options.fileExtensions.indexOf(mimeType[i]) !== -1){
@@ -715,7 +718,7 @@ export default class Upload extends Emitter {
      * Check if size is valid
      * *******************************************************
      */
-    _validSize = (file) => {
+    _validSize(file){
         let fileSize = file.size / 1024 / 1024;
         if (fileSize < this.options.maxFileSize) {
             return true;
@@ -729,7 +732,7 @@ export default class Upload extends Emitter {
      * Check if total size is valid
      * *******************************************************
      */
-    _validTotalSize = (file=null, files=this.filesList) => {
+    _validTotalSize(file=null, files=this.filesList){
         return Math.round(this.maxTotalFilesSize) >= this._getTotalSize(file, files);
     };
 
@@ -754,7 +757,7 @@ export default class Upload extends Emitter {
      * Return size rest
      * *******************************************************
      */
-    _getRestSize = (files=this.filesList) => {
+    _getRestSize(files=this.filesList){
         return this._getFileSize(this.maxTotalFilesSize - this._getTotalSize(null, files));
     };
 
@@ -764,7 +767,7 @@ export default class Upload extends Emitter {
      * Return total size of files list
      * *******************************************************
      */
-    _getTotalSize = (file, files) => {
+    _getTotalSize(file, files){
         let size = 0;
         if(files.length){
             for(let i in files) {
@@ -783,7 +786,7 @@ export default class Upload extends Emitter {
      * Return file size
      * *******************************************************
      */
-    _getFileSize = (size) => {
+    _getFileSize(size){
         let fSExt = new Array('Octets', 'Ko', 'Mo', 'Go');
         let i = 0;
         while(size > 900){
@@ -799,7 +802,7 @@ export default class Upload extends Emitter {
      * Return filename
      * *******************************************************
      */
-    _getFileName = (filename) => {
+    _getFileName(filename){
         let ext = filename.split('.').pop();
         let length = filename.length - ext.length - 1;
         if(length > this.options.limitCharacters){
@@ -814,7 +817,7 @@ export default class Upload extends Emitter {
      * Return form data
      * *******************************************************
      */
-    _getFormData = (form) => {
+    _getFormData(form){
         let formData = new FormData(form[0]);
         for (let i = 0; i < this.filesList.length; i++) {
             formData.append(fileInput.getAttribute("name") + '[' + i + ']', this.filesList[i]);
@@ -828,7 +831,7 @@ export default class Upload extends Emitter {
      * Update
      * *******************************************************
      */
-    update = settings => {
+    update(settings){
 
         if(!this.fileInput || !settings || !Object.keys(settings).length){
             return;
@@ -848,7 +851,7 @@ export default class Upload extends Emitter {
      * Reset
      * *******************************************************
      */
-    reset = (settings={}) => {
+    reset(settings={}){
 
         this.filesList = [];
         this.fileInput.value = '';
@@ -881,7 +884,7 @@ export default class Upload extends Emitter {
      * Clear
      * *******************************************************
      */
-    _clear = () => {
+    _clear(){
         if(this.wrapperInformation){
             this.filesList = [];
             this._cleanError();
@@ -895,7 +898,7 @@ export default class Upload extends Emitter {
      * Display Errors
      * *******************************************************
      */
-    _displayError = () => {
+    _displayError(){
 
         if(this.wrapperInformation){
 
@@ -983,7 +986,7 @@ export default class Upload extends Emitter {
     set language(language) {
 
         if(!language || this.options.language === language || !this.fileInput){
-           return 
+            return
         }
 
         this.options.language = language;
