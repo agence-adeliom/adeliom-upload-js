@@ -15,7 +15,7 @@ yarn add https://bitbucket.org/adeliomgit/adeliom-upload-js.git
 
 # Import
 ```
-import Upload from './upload';
+import Upload from 'adeliom-upload-js';
 ```
 
 # Available options (by default)
