@@ -70,7 +70,7 @@ export default class Upload extends Emitter {
          * Merge object
          * *******************************************************
          */
-        this.options = this._mergeObjects(this.options, settings);
+        this.options = Object.assign(this.options, settings);
 
 
         /**
@@ -88,7 +88,7 @@ export default class Upload extends Emitter {
                     }
                 }
                 else{
-                    this._mergeObjects(this.text[lng], this.options.languages[lng]);
+                    Object.assign(this.text[lng], this.options.languages[lng]);
                 }
             });
         }
@@ -1008,23 +1008,6 @@ export default class Upload extends Emitter {
         if(this.options.displayRestFiles){
             this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
         }
-    }
-
-    /**
-     * *******************************************************
-     * Merge objects
-     * *******************************************************
-     */
-    _mergeObjects() {
-        var resObj = {};
-        for(var i=0; i < arguments.length; i += 1) {
-            var obj = arguments[i],
-                keys = Object.keys(obj);
-            for(var j=0; j < keys.length; j += 1) {
-                resObj[keys[j]] = obj[keys[j]];
-            }
-        }
-        return resObj;
     }
 
 }
