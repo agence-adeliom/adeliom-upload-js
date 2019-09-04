@@ -1,1 +1,1 @@
-import './src/upload';
+import './dist/upload';

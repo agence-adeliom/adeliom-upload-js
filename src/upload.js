@@ -1,9 +1,6 @@
 import {fr} from './languages/fr.js';
 import {en} from './languages/en.js';
 
-import "core-js/stable";
-import "regenerator-runtime/runtime";
-
 class Emitter {
 
     constructor() {
