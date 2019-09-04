@@ -2,7 +2,7 @@
   "name": "adeliom-upload-js",
   "version": "2.0.0",
   "description": "Upload field",
-  "main": "src/upload.js",
+  "main": "dist/upload.js",
   "repository": "https://antoinewaag@bitbucket.org/adeliomgit/adeliom-upload-js.git",
   "author": "Adeliom",
   "license": "ISC",
