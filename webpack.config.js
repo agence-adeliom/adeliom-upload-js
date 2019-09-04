@@ -18,12 +18,14 @@ module.exports = {
             {
                 test: /\.jsx?$/,
                 include: [
+                    path.resolve(__dirname, "src")
                 ],
                 exclude: [
+                    path.resolve(__dirname, "demo")
                 ],
                 loader: "babel-loader",
                 options: {
-                    presets: ["es2015"]
+                    presets: ["@babel/preset-env"]
                 },
             }
         ]
