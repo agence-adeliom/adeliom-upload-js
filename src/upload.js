@@ -1,9 +1,6 @@
 import {fr} from './languages/fr.js';
 import {en} from './languages/en.js';
 
-// import "core-js/stable";
-// import "regenerator-runtime/runtime";
-
 class Emitter {
 
     constructor() {
@@ -73,7 +70,7 @@ export default class Upload extends Emitter {
          * Merge object
          * *******************************************************
          */
-        this.options = Object.assign(this.options, settings);
+        this.options = this._mergeObjects(this.options, settings);
 
 
         /**
@@ -91,7 +88,7 @@ export default class Upload extends Emitter {
                     }
                 }
                 else{
-                    Object.assign(this.text[lng], this.options.languages[lng]);
+                    this._mergeObjects(this.text[lng], this.options.languages[lng]);
                 }
             });
         }
@@ -1011,6 +1008,23 @@ export default class Upload extends Emitter {
         if(this.options.displayRestFiles){
             this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
         }
+    }
+
+    /**
+     * *******************************************************
+     * Merge objects
+     * *******************************************************
+     */
+    _mergeObjects() {
+        var resObj = {};
+        for(var i=0; i < arguments.length; i += 1) {
+            var obj = arguments[i],
+                keys = Object.keys(obj);
+            for(var j=0; j < keys.length; j += 1) {
+                resObj[keys[j]] = obj[keys[j]];
+            }
+        }
+        return resObj;
     }
 
 }
