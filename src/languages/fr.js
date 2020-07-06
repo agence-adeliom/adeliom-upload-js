@@ -9,8 +9,8 @@ export const fr = {
     textMultipleFileNotValid: "Vos fichiers ne sont pas valides:",
     textFileTooBig: "Votre fichier est trop lourd:",
     textMultipleFileTooBig: "Vos fichiers sont trop lourds :",
-    textTotalFilesSize: "Le poids total de vos fichiers est trop lourd.",
-    textTooManyFiles: "Le nombre de fichiers téléchargés est trop élevé !",
+    textTotalFilesSize: "Le poids total de vos fichiers est trop lourd",
+    textTooManyFiles: "Le nombre de fichiers téléchargés est trop élevé",
     textTotalFiles: "La limite du nombre de fichier est atteinte",
-    textErrorUpload: "Une erreur est survenue, impossible de télécharger le fichier."
+    textErrorUpload: "Une erreur est survenue, impossible de télécharger le fichier"
 };
