@@ -1,4 +1,4 @@
-import Upload from '../src/upload-v2.js';
+import Upload from '../src/upload.js';
 
 const ru = {
     textBtnUpload: 'Ajouter un fichier',

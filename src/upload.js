@@ -43,6 +43,7 @@ export default class Upload extends Emitter {
 
         this.options = {
             selector: 'input[type="file"]',
+            preloadFiles: [],
             maxFileSize: 2,
             maxTotalFilesSize: 10,
             maxNbFiles: 5,
@@ -232,6 +233,10 @@ export default class Upload extends Emitter {
         if (this.options.dropZone) {
             this._initDropZone();
             return;
+        }
+
+        if(this.options.preloadFiles && this.options.preloadFiles.length) {
+            this._addNewFile(null, this.options.preloadFiles);
         }
 
         this.emit("init", {
@@ -558,7 +563,7 @@ export default class Upload extends Emitter {
         }
 
         if(this.filesList.length){
-            this.wrapperSelected.innerHTML = this.text[this.options.language].textAfterUpload;
+            this.wrapperSelected.innerHTML = this._getText(this.text[this.options.language].textAfterUpload, this.filesList.length);
         }
         else{
             this.wrapperSelected.innerHTML = this.text[this.options.language].textBeforeUpload;
@@ -596,6 +601,15 @@ export default class Upload extends Emitter {
         const file = this.filesList[index];
         this.filesList.splice(index, 1);
         this._displayFile();
+
+        const oldInput = this.fileInput;
+        const newInput = oldInput.cloneNode();
+        oldInput.parentNode.replaceChild(newInput, oldInput);
+
+        this.fileInput = newInput;
+
+        this.fileInput.addEventListener("change", this._addNewFile.bind(this));
+
         this.emit("delete", {
             "file": file,
             "filesList": this.filesList
@@ -817,7 +831,7 @@ export default class Upload extends Emitter {
      * Return form data
      * *******************************************************
      */
-    _getFormData(form){
+    getFormData(form){
         let formData = new FormData(form[0]);
         for (let i = 0; i < this.filesList.length; i++) {
             formData.append(fileInput.getAttribute("name") + '[' + i + ']', this.filesList[i]);
