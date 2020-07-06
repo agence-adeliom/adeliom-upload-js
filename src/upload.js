@@ -167,33 +167,29 @@ export default class Upload extends Emitter {
             this.wrapperBtnUpload.appendChild(customContent.firstChild);
         }
 
-        if(this.options.displayRestSize || this.options.displayRestFiles || this.options.displayMaxFileSize){
+        this.wrapperInformation = document.createElement('div');
+        this.wrapperInformation.classList.add('w-information');
+        this.parentInput.appendChild(this.wrapperInformation);
 
-            this.wrapperInformation = document.createElement('div');
-            this.wrapperInformation.classList.add('w-information');
-            this.parentInput.appendChild(this.wrapperInformation);
+        if(this.options.displayRestSize){
+            this.restSize = document.createElement('div');
+            this.restSize.classList.add('w-information__size');
+            this.restSize.innerHTML = this._getText(this.text[this.options.language].textSizeRest, this._getRestSize());
+            this.wrapperInformation.appendChild(this.restSize);
+        }
 
-            if(this.options.displayRestSize){
-                this.restSize = document.createElement('div');
-                this.restSize.classList.add('w-information__size');
-                this.restSize.innerHTML = this._getText(this.text[this.options.language].textSizeRest, this._getRestSize());
-                this.wrapperInformation.appendChild(this.restSize);
-            }
+        if(this.options.displayMaxFileSize){
+            this.maxFileSize = document.createElement('div');
+            this.maxFileSize.classList.add('w-information__size-max');
+            this.maxFileSize.innerHTML = this._getText(this.text[this.options.language].textMaxFileSize, this._getFileSize(this.options.maxFileSize * 1048576));
+            this.wrapperInformation.appendChild(this.maxFileSize);
+        }
 
-            if(this.options.displayMaxFileSize){
-                this.maxFileSize = document.createElement('div');
-                this.maxFileSize.classList.add('w-information__size-max');
-                this.maxFileSize.innerHTML = this._getText(this.text[this.options.language].textMaxFileSize, this._getFileSize(this.options.maxFileSize * 1048576));
-                this.wrapperInformation.appendChild(this.maxFileSize);
-            }
-
-            if(this.options.displayRestFiles){
-                this.restFiles = document.createElement('div');
-                this.restFiles.classList.add('w-information__files');
-                this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
-                this.wrapperInformation.appendChild(this.restFiles);
-            }
-
+        if(this.options.displayRestFiles){
+            this.restFiles = document.createElement('div');
+            this.restFiles.classList.add('w-information__files');
+            this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
+            this.wrapperInformation.appendChild(this.restFiles);
         }
 
         this.wrapperFiles = document.createElement('div');
@@ -306,7 +302,7 @@ export default class Upload extends Emitter {
         if(this.options.maxNbFiles && this.options.maxNbFiles < filesArr.length){
             this.currentErrors.push({
                 error: new Error("Limit files !").code = "TOO_MANY_FILES",
-                message: this.text[this.options.language].textTooManyFiles
+                message: this._getText(this.text[this.options.language].textTooManyFiles, this.options.maxNbFiles)
             });
             this._displayError();
             return;
@@ -315,7 +311,7 @@ export default class Upload extends Emitter {
         if(this.options.maxNbFiles && (this.options.maxNbFiles === this.filesList.length) || (this.options.maxNbFiles < this.filesList.length + filesArr.length)){
             this.currentErrors.push({
                 error: new Error("Limit files !").code = "TOO_MANY_FILES",
-                message: this.text[this.options.language].textTotalFiles
+                message: this._getText(this.text[this.options.language].textTotalFiles, this.options.maxNbFiles)
             });
             this._displayError();
             return;
