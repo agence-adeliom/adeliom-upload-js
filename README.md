@@ -1,6 +1,6 @@
 # Install
 ```
-yarn add https://bitbucket.org/adeliomgit/adeliom-upload-js.git
+npm install git@github.com:agence-adeliom/adeliom-upload-js.git
 ```
 
 # HTML
