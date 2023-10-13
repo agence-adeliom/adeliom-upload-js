@@ -6,32 +6,35 @@ import "regenerator-runtime/runtime";
 
 class Emitter {
 
-    constructor() {
+    constructor()
+    {
         this.events = {};
     }
 
-    on(eventName, fn) {
-        if(!this.events[eventName]) {
+    on(eventName, fn)
+    {
+        if (!this.events[eventName]) {
             this.events[eventName] = [];
         }
         this.events[eventName].push(fn);
     }
 
-    emit(eventName, data) {
+    emit(eventName, data)
+    {
         const event = this.events[eventName];
-        if(event) {
+        if (event) {
             event.forEach(fn => {
                 fn.call(null, data);
             });
         }
     }
-
 }
 
 
 export default class Upload extends Emitter {
 
-    constructor(settings){
+    constructor(settings)
+    {
 
         super();
 
@@ -60,7 +63,8 @@ export default class Upload extends Emitter {
             language: 'fr',
             languages: {},
             customContentOnly: false,
-            customContent: ''
+            customContent: '',
+            useBase64Inputs: false,
         };
 
         this.text = [];
@@ -84,14 +88,13 @@ export default class Upload extends Emitter {
          */
         const keysLng = Object.keys(this.options.languages);
 
-        if(keysLng.length){
+        if (keysLng.length) {
             keysLng.forEach((lng, i) => {
-                if(!this.text[lng]){
-                    if(this._compareKeys(this.options.languages[lng], fr)){
+                if (!this.text[lng]) {
+                    if (this._compareKeys(this.options.languages[lng], fr)) {
                         this.text[lng] = this.options.languages[lng];
                     }
-                }
-                else{
+                } else {
                     Object.assign(this.text[lng], this.options.languages[lng]);
                 }
             });
@@ -122,7 +125,7 @@ export default class Upload extends Emitter {
         this.restFiles;
         this.progressBar;
         this.progressBarContent;
-
+        this.base64InputsCounter = 0;
     }
 
 
@@ -132,13 +135,14 @@ export default class Upload extends Emitter {
      * *******************************************************
      */
 
-    init(){
+    init()
+    {
 
         this.maxTotalFilesSize = this.options.maxTotalFilesSize * 1048576;
 
         this.fileInput  = document.querySelector(this.options.selector);
 
-        if(!this.fileInput){
+        if (!this.fileInput) {
             return;
         }
 
@@ -158,11 +162,11 @@ export default class Upload extends Emitter {
 
         this.wrapperInput.appendChild(this.wrapperBtnUpload);
 
-        if(!this.options.customContent || !this.options.customContentOnly){
+        if (!this.options.customContent || !this.options.customContentOnly) {
             this.wrapperBtnUpload.appendChild(this.btnUpload);
         }
 
-        if(this.options.customContent){
+        if (this.options.customContent) {
             const customContent = new DOMParser().parseFromString(this.options.customContent, "text/xml");
             this.wrapperBtnUpload.appendChild(customContent.firstChild);
         }
@@ -171,21 +175,21 @@ export default class Upload extends Emitter {
         this.wrapperInformation.classList.add('w-information');
         this.parentInput.appendChild(this.wrapperInformation);
 
-        if(this.options.displayRestSize){
+        if (this.options.displayRestSize) {
             this.restSize = document.createElement('div');
             this.restSize.classList.add('w-information__size');
             this.restSize.innerHTML = this._getText(this.text[this.options.language].textSizeRest, this._getRestSize());
             this.wrapperInformation.appendChild(this.restSize);
         }
 
-        if(this.options.displayMaxFileSize){
+        if (this.options.displayMaxFileSize) {
             this.maxFileSize = document.createElement('div');
             this.maxFileSize.classList.add('w-information__size-max');
             this.maxFileSize.innerHTML = this._getText(this.text[this.options.language].textMaxFileSize, this._getFileSize(this.options.maxFileSize * 1048576));
             this.wrapperInformation.appendChild(this.maxFileSize);
         }
 
-        if(this.options.displayRestFiles){
+        if (this.options.displayRestFiles) {
             this.restFiles = document.createElement('div');
             this.restFiles.classList.add('w-information__files');
             this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
@@ -201,7 +205,7 @@ export default class Upload extends Emitter {
         this.wrapperSelected.innerHTML = this.text[this.options.language].textBeforeUpload;
         this.wrapperFiles.appendChild(this.wrapperSelected);
 
-        if(this.options.actionAjax){
+        if (this.options.actionAjax) {
             this.progressBar = document.createElement('div');
             this.progressBar.classList.add('w-progress-bar');
 
@@ -212,11 +216,11 @@ export default class Upload extends Emitter {
             this.parentInput.appendChild(this.progressBar);
         }
 
-        if(this.options.multiple){
+        if (this.options.multiple) {
             this.fileInput.setAttribute('multiple', true);
         }
 
-        if(this.options.fileExtensions.length){
+        if (this.options.fileExtensions.length) {
             this.fileInput.setAttribute('accept', this.options.fileExtensions);
         }
 
@@ -231,7 +235,7 @@ export default class Upload extends Emitter {
             return;
         }
 
-        if(this.options.preloadFiles && this.options.preloadFiles.length) {
+        if (this.options.preloadFiles && this.options.preloadFiles.length) {
             this._addNewFile(null, this.options.preloadFiles);
         }
 
@@ -246,7 +250,8 @@ export default class Upload extends Emitter {
      * Drop Zone
      * *******************************************************
      */
-    _initDropZone(){
+    _initDropZone()
+    {
 
         let droppedFiles = false;
 
@@ -282,24 +287,34 @@ export default class Upload extends Emitter {
 
     };
 
+    _fileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        })  ;
+    };
+
 
     /**
      * *******************************************************
      * Add a new file in array
      * *******************************************************
      */
-    _addNewFile(event, files=[]){
+    _addNewFile(event, files=[])
+    {
 
         this.currentFiles = [];
         this.currentErrors = [];
 
         let filesArr = files.length ? files : event.target.files ? event.target.files : null;
 
-        if(!filesArr){
+        if (!filesArr) {
             return;
         }
 
-        if(this.options.maxNbFiles && this.options.maxNbFiles < filesArr.length){
+        if (this.options.maxNbFiles && this.options.maxNbFiles < filesArr.length) {
             this.currentErrors.push({
                 error: new Error("Limit files !").code = "TOO_MANY_FILES",
                 message: this._getText(this.text[this.options.language].textTooManyFiles, this.options.maxNbFiles)
@@ -308,7 +323,7 @@ export default class Upload extends Emitter {
             return;
         }
 
-        if(this.options.maxNbFiles && (this.options.maxNbFiles === this.filesList.length) || (this.options.maxNbFiles < this.filesList.length + filesArr.length)){
+        if (this.options.maxNbFiles && (this.options.maxNbFiles === this.filesList.length) || (this.options.maxNbFiles < this.filesList.length + filesArr.length)) {
             this.currentErrors.push({
                 error: new Error("Limit files !").code = "TOO_MANY_FILES",
                 message: this._getText(this.text[this.options.language].textTotalFiles, this.options.maxNbFiles)
@@ -318,10 +333,9 @@ export default class Upload extends Emitter {
         }
 
         Object.values(filesArr).forEach((file, i) => {
+            const extension = file.name.split('.').length > 1 ? '.' + file.name.split('.').pop().toLowerCase() : null;
 
-            const extension = file.name.split('.').length > 1 ? '.'+ file.name.split('.').pop().toLowerCase() : null;
-
-            if(this.options.fileExtensions.length && this.options.fileExtensions.indexOf(extension) === -1){
+            if (this.options.fileExtensions.length && this.options.fileExtensions.indexOf(extension) === -1) {
                 this.currentErrors.push({
                     error: new Error("Extension is not valid").code = "EXTENSION",
                     mimeType: extension,
@@ -331,7 +345,7 @@ export default class Upload extends Emitter {
                 return;
             }
 
-            if(!this._validSize(file)){
+            if (!this._validSize(file)) {
                 this.currentErrors.push({
                     error: new Error("Size is too big").code = "SIZE",
                     file: file,
@@ -341,7 +355,7 @@ export default class Upload extends Emitter {
                 return;
             }
 
-            if(!this._validTotalSize(file)){
+            if (!this._validTotalSize(file)) {
                 this.currentErrors.push({
                     error: new Error("Total size is too big").code = "TOTAL_SIZE",
                     file: file,
@@ -354,14 +368,37 @@ export default class Upload extends Emitter {
 
             this.currentFiles.push(file);
 
+            if (this.options.useBase64Inputs) {
+                this._fileToBase64(file).then(base64String => {
+                    this._getFormat(escape(file.name), file, (url, headerString) => {
+                        const mimeType = this._getMimeType(headerString);
+
+                        const data = {
+                            contents: base64String,
+                            filename: file.name,
+                            extension: this._getExtension(file.name),
+                            mime: mimeType,
+                        };
+
+                        const newInput = document.createElement('input');
+                        newInput.type = 'hidden';
+                        newInput.name = `${this.fileInput.id}_b64[${this.base64InputsCounter++}]`;
+                        newInput.value = JSON.stringify(data);
+                        newInput.setAttribute('base64-file',true);
+                        newInput.setAttribute('base64-identifier', this._getUniqueNameFromFile(file));
+
+                        this.fileInput.parentNode.appendChild(newInput);
+                    });
+                });
+            }
+
         });
 
-        if(this.options.mimeType && filesArr.length === this.currentErrors.length){
+        if (this.options.mimeType && filesArr.length === this.currentErrors.length) {
             this._displayError();
         }
 
-        if(this.options.mimeType){
-
+        if (this.options.mimeType) {
             let index = parseInt(1 + this.currentErrors.length);
 
             this.currentFiles.forEach((file, i) => {
@@ -370,7 +407,7 @@ export default class Upload extends Emitter {
 
                     const mimeType = this._getMimeType(headerString);
 
-                    if(this.options.fileExtensions.length && !this._isValidMimeType(mimeType)){
+                    if (this.options.fileExtensions.length && !this._isValidMimeType(mimeType)) {
                         this.currentErrors.push({
                             error: new Error("Mime Type is not valid").code = "EXTENSION",
                             mimeType: this._getExtension(file.name),
@@ -380,7 +417,7 @@ export default class Upload extends Emitter {
                         this.currentFiles.splice(currentFiles.findIndex(x => x.name === file.name), 1);
                     }
 
-                    if(filesArr.length === index){
+                    if (filesArr.length === index) {
                         this._checkFiles();
                     }
 
@@ -402,9 +439,10 @@ export default class Upload extends Emitter {
      * Check file
      * *******************************************************
      */
-    _checkFiles(){
+    _checkFiles()
+    {
 
-        if(!this._validTotalSize(null, this.currentFiles)){
+        if (!this._validTotalSize(null, this.currentFiles)) {
             this.currentErrors.push({
                 error: new Error("Total size is too big").code = "TOTAL_SIZE_MULTIPLE",
                 currentFiles: this.currentFiles,
@@ -415,11 +453,11 @@ export default class Upload extends Emitter {
             return;
         }
 
-        if(this.currentFiles.length){
+        if (this.currentFiles.length) {
             this._onSuccess(this.currentFiles);
         }
 
-        if(this.currentErrors.length){
+        if (this.currentErrors.length) {
             this._displayError();
         }
 
@@ -431,16 +469,16 @@ export default class Upload extends Emitter {
      * On success
      * *******************************************************
      */
-    _onSuccess() {
+    _onSuccess()
+    {
 
-        if(!this.currentErrors.length){
+        if (!this.currentErrors.length) {
             this._cleanError();
         }
 
-        if(this.options.actionAjax){
+        if (this.options.actionAjax) {
             this._uploadFile(this.currentFiles);
-        }
-        else{
+        } else {
             this._displayResult(this.currentFiles);
         }
 
@@ -452,7 +490,8 @@ export default class Upload extends Emitter {
      * Display result
      * *******************************************************
      */
-    _displayResult(currentFiles){
+    _displayResult(currentFiles)
+    {
 
         this.filesList = this.filesList.concat(currentFiles);
 
@@ -466,20 +505,25 @@ export default class Upload extends Emitter {
 
     }
 
+    _getUniqueNameFromFile(file)
+    {
+        return `${file.lastModified}_${file.size}_${file.name}`;
+    }
+
 
     /**
      * *******************************************************
      * Upload file
      * *******************************************************
      */
-    _uploadFile(currentFiles){
+    _uploadFile(currentFiles)
+    {
 
-        if(this.progressBar){
+        if (this.progressBar) {
             this.parentInput.classList.add('uploading');
             this.progressBar.classList.add('active');
             this.progressBarContent.style.width = '0%';
-        }
-        else{
+        } else {
             return;
         }
 
@@ -498,18 +542,16 @@ export default class Upload extends Emitter {
         xhr.upload.addEventListener("progress", (evt) => {
 
             if (evt.lengthComputable) {
-
                 let percentComplete = evt.loaded / evt.total;
                 percentComplete = parseInt(percentComplete * 100);
                 this.progressBarContent.style.width = percentComplete + '%';
 
-                if(percentComplete === 100){
+                if (percentComplete === 100) {
                     setTimeout(() => {
                         this.parentInput.classList.remove('uploading');
                         this.progressBar.classList.remove('active');
                     }, 500);
                 }
-
             }
 
         });
@@ -517,11 +559,9 @@ export default class Upload extends Emitter {
         xhr.onreadystatechange = (data) => {
 
             if (xhr.readyState === 4) {
-                if (xhr.status === 200){
+                if (xhr.status === 200) {
                     this.displayResult(currentFiles);
-                }
-                else {
-
+                } else {
                     progressBarContent.style.width = '0%';
 
                     this.currentErrors.push({
@@ -531,7 +571,6 @@ export default class Upload extends Emitter {
                     });
 
                     this._displayError();
-
                 }
             }
 
@@ -547,29 +586,28 @@ export default class Upload extends Emitter {
      * Display files list
      * *******************************************************
      */
-    _displayFile(){
+    _displayFile()
+    {
 
-        if(!this.filesContent){
+        if (!this.filesContent) {
             this.filesContent = document.createElement('div');
             this.filesContent.classList.add('w-files__content');
             this.wrapperFiles.appendChild(this.filesContent);
-        }
-        else{
+        } else {
             this.filesContent.innerHTML = '';
         }
 
-        if(this.filesList.length){
+        if (this.filesList.length) {
             this.wrapperSelected.innerHTML = this._getText(this.text[this.options.language].textAfterUpload, this.filesList.length);
-        }
-        else{
+        } else {
             this.wrapperSelected.innerHTML = this.text[this.options.language].textBeforeUpload;
         }
 
-        if(this.restSize){
+        if (this.restSize) {
             this.restSize.innerHTML = this._getText(this.text[this.options.language].textSizeRest, this._getRestSize());
         }
 
-        if(this.restFiles){
+        if (this.restFiles) {
             this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, (this.options.maxNbFiles - this.filesList.length));
         }
 
@@ -577,9 +615,9 @@ export default class Upload extends Emitter {
             let newFile = document.createElement('div');
             newFile.classList.add('file');
             newFile.innerHTML =
-                '<span class="file__delete"></span>'+
-                '<span class="file__name">'+ this._getFileName(file.name) +'</span>'+
-                '<span class="file__size">('+ this._getFileSize(file.size) +')</span>';
+                '<span class="file__delete"></span>' +
+                '<span class="file__name">' + this._getFileName(file.name) + '</span>' +
+                '<span class="file__size">(' + this._getFileSize(file.size) + ')</span>';
             this.filesContent.appendChild(newFile);
             newFile.querySelector('.file__delete').addEventListener("click", this._removeFile.bind(this));
         });
@@ -591,7 +629,8 @@ export default class Upload extends Emitter {
      * Remove file from array
      * *******************************************************
      */
-    _removeFile(e){
+    _removeFile(e)
+    {
         const nodes = Array.prototype.slice.call(this.filesContent.children);
         const index = nodes.indexOf(e.target.parentNode);
         const file = this.filesList[index];
@@ -606,6 +645,14 @@ export default class Upload extends Emitter {
 
         this.fileInput.addEventListener("change", this._addNewFile.bind(this));
 
+        if(this.options.useBase64Inputs) {
+            const fileInputToRemove = document.querySelector(`input[base64-identifier="${this._getUniqueNameFromFile(file)}"]`);
+
+            if(fileInputToRemove){
+                fileInputToRemove.parentNode.removeChild(fileInputToRemove);
+            }
+        }
+
         this.emit("delete", {
             "file": file,
             "filesList": this.filesList
@@ -618,11 +665,12 @@ export default class Upload extends Emitter {
      * Clean error
      * *******************************************************
      */
-    _cleanError(){
-        if(this.parentInput){
+    _cleanError()
+    {
+        if (this.parentInput) {
             this.parentInput.classList.remove('error-upload');
         }
-        if(this.wrapperError && this.wrapperError.parentNode){
+        if (this.wrapperError && this.wrapperError.parentNode) {
             this.wrapperError.parentNode.removeChild(this.wrapperError);
         }
     };
@@ -633,7 +681,8 @@ export default class Upload extends Emitter {
      * Get format
      * *******************************************************
      */
-    _getFormat(url, blob, callback){
+    _getFormat(url, blob, callback)
+    {
         var fileReader = new FileReader();
         this.parentInput.classList.add('loading');
         fileReader.onloadend = (e) => {
@@ -654,8 +703,9 @@ export default class Upload extends Emitter {
      * Get extension
      * *******************************************************
      */
-    _getExtension(filename){
-        return filename.split('.').length > 1 ? '.'+ filename.split('.').pop().toLowerCase() : null;
+    _getExtension(filename)
+    {
+        return filename.split('.').length > 1 ? '.' + filename.split('.').pop().toLowerCase() : null;
     };
 
 
@@ -664,7 +714,8 @@ export default class Upload extends Emitter {
      * Get mime type
      * *******************************************************
      */
-    _getMimeType(headerString){
+    _getMimeType(headerString)
+    {
         let type = "";
         switch (headerString) {
             case "89504e47":
@@ -705,17 +756,17 @@ export default class Upload extends Emitter {
      * Return if Mime Type is correct
      * *******************************************************
      */
-    _isValidMimeType(mimeType){
-        if(Array.isArray(mimeType)){
-            for(let i = 0; i <= mimeType.length; i++){
-                if(this.options.fileExtensions.indexOf(mimeType[i]) !== -1){
+    _isValidMimeType(mimeType)
+    {
+        if (Array.isArray(mimeType)) {
+            for (let i = 0; i <= mimeType.length; i++) {
+                if (this.options.fileExtensions.indexOf(mimeType[i]) !== -1) {
                     return true;
                 }
             }
             return false;
-        }
-        else{
-            if(this.options.fileExtensions.indexOf(mimeType) !== -1){
+        } else {
+            if (this.options.fileExtensions.indexOf(mimeType) !== -1) {
                 return true;
             }
             return false;
@@ -728,7 +779,8 @@ export default class Upload extends Emitter {
      * Check if size is valid
      * *******************************************************
      */
-    _validSize(file){
+    _validSize(file)
+    {
         let fileSize = file.size / 1024 / 1024;
         if (fileSize < this.options.maxFileSize) {
             return true;
@@ -742,7 +794,8 @@ export default class Upload extends Emitter {
      * Check if total size is valid
      * *******************************************************
      */
-    _validTotalSize(file=null, files=this.filesList){
+    _validTotalSize(file=null, files=this.filesList)
+    {
         return Math.round(this.maxTotalFilesSize) >= this._getTotalSize(file, files);
     };
 
@@ -752,11 +805,11 @@ export default class Upload extends Emitter {
      * Return text with replace
      * *******************************************************
      */
-    _getText(text, value){
-        if(typeof value === 'string' && value.match(/\d+/)[0] > 1 || typeof value === 'number' && value > 1){
+    _getText(text, value)
+    {
+        if (typeof value === 'string' && value.match(/\d+/)[0] > 1 || typeof value === 'number' && value > 1) {
             return text.replace(/{{number}}/g, value).replace(/{{s}}/g, 's');
-        }
-        else{
+        } else {
             return text.replace(/{{number}}/g, value).replace(/{{s}}/g, '');
         }
     }
@@ -767,7 +820,8 @@ export default class Upload extends Emitter {
      * Return size rest
      * *******************************************************
      */
-    _getRestSize(files=this.filesList){
+    _getRestSize(files=this.filesList)
+    {
         return this._getFileSize(this.maxTotalFilesSize - this._getTotalSize(null, files));
     };
 
@@ -777,14 +831,15 @@ export default class Upload extends Emitter {
      * Return total size of files list
      * *******************************************************
      */
-    _getTotalSize(file, files){
+    _getTotalSize(file, files)
+    {
         let size = 0;
-        if(files.length){
-            for(let i in files) {
+        if (files.length) {
+            for (let i in files) {
                 size += files[i].size;
             }
         }
-        if(file){
+        if (file) {
             size += file.size;
         }
         return size;
@@ -796,14 +851,15 @@ export default class Upload extends Emitter {
      * Return file size
      * *******************************************************
      */
-    _getFileSize(size){
+    _getFileSize(size)
+    {
         let fSExt = new Array('Octets', 'Ko', 'Mo', 'Go');
         let i = 0;
-        while(size > 900){
+        while (size > 900) {
             size /= 1024;
             i++;
         }
-        return (Math.round(size*100)/100)+' '+fSExt[i];
+        return (Math.round(size * 100) / 100) + ' ' + fSExt[i];
     };
 
 
@@ -812,10 +868,11 @@ export default class Upload extends Emitter {
      * Return filename
      * *******************************************************
      */
-    _getFileName(filename){
+    _getFileName(filename)
+    {
         let ext = filename.split('.').pop();
         let length = filename.length - ext.length - 1;
-        if(length > this.options.limitCharacters){
+        if (length > this.options.limitCharacters) {
             filename = filename.substr(0, this.options.limitCharacters) + '(...).' + ext;
         }
         return filename;
@@ -827,7 +884,8 @@ export default class Upload extends Emitter {
      * Return form data
      * *******************************************************
      */
-    getFormData(form){
+    getFormData(form)
+    {
         let formData = new FormData(form[0]);
         for (let i = 0; i < this.filesList.length; i++) {
             formData.append(fileInput.getAttribute("name") + '[' + i + ']', this.filesList[i]);
@@ -841,16 +899,16 @@ export default class Upload extends Emitter {
      * Update
      * *******************************************************
      */
-    update(settings){
+    update(settings)
+    {
 
-        if(!this.fileInput || !settings || !Object.keys(settings).length){
+        if (!this.fileInput || !settings || !Object.keys(settings).length) {
             return;
         }
 
-        if(Object.keys(settings).length === 1 && settings.language){
+        if (Object.keys(settings).length === 1 && settings.language) {
             Upload.language = settings.language;
-        }
-        else{
+        } else {
             this.reset(settings);
         }
 
@@ -861,26 +919,25 @@ export default class Upload extends Emitter {
      * Reset
      * *******************************************************
      */
-    reset(settings={}){
+    reset(settings={})
+    {
 
         this.filesList = [];
         this.fileInput.value = '';
 
-        if(this.wrapperInformation){
-
+        if (this.wrapperInformation) {
             this._cleanError();
 
             this.wrapperInformation.remove();
 
-            if(this.wrapperFiles){
+            if (this.wrapperFiles) {
                 this.wrapperFiles.remove();
             }
 
             this.filesContent = '';
-
         }
 
-        if(this.wrapperBtnUpload){
+        if (this.wrapperBtnUpload) {
             this.wrapperBtnUpload.remove();
         }
 
@@ -894,8 +951,9 @@ export default class Upload extends Emitter {
      * Clear
      * *******************************************************
      */
-    _clear(){
-        if(this.wrapperInformation){
+    _clear()
+    {
+        if (this.wrapperInformation) {
             this.filesList = [];
             this._cleanError();
             this._displayFile();
@@ -908,10 +966,10 @@ export default class Upload extends Emitter {
      * Display Errors
      * *******************************************************
      */
-    _displayError(){
+    _displayError()
+    {
 
-        if(this.wrapperInformation){
-
+        if (this.wrapperInformation) {
             this._cleanError();
 
             this.wrapperError = document.createElement('div');
@@ -919,11 +977,11 @@ export default class Upload extends Emitter {
 
             const errorSize = this.currentErrors.filter(x => x.error === 'SIZE');
 
-            if(errorSize.length){
+            if (errorSize.length) {
                 let error = document.createElement('span');
                 let text = errorSize.length === 1 ? this.text[this.options.language].textFileTooBig : this.text[this.options.language].textMultipleFileTooBig;
 
-                if(this.options.displayFilenameError){
+                if (this.options.displayFilenameError) {
                     errorSize.forEach((currentError, i) => {
                         text += i ? ', ' + this._getFileName(currentError.file.name) : ' ' + this._getFileName(currentError.file.name);
                     });
@@ -935,11 +993,11 @@ export default class Upload extends Emitter {
 
             const errorExtension = this.currentErrors.filter(x => x.error === 'EXTENSION');
 
-            if(errorExtension.length){
+            if (errorExtension.length) {
                 let error = document.createElement('span');
                 let text = errorExtension.length === 1 ? this.text[this.options.language].textFileNotValid : this.text[this.options.language].textMultipleFileNotValid;
 
-                if(this.options.displayFilenameError){
+                if (this.options.displayFilenameError) {
                     errorExtension.forEach((currentError, i) => {
                         text += i ? ', ' + this._getFileName(currentError.file.name) : ' ' + this._getFileName(currentError.file.name);
                     });
@@ -950,7 +1008,7 @@ export default class Upload extends Emitter {
             }
 
             this.currentErrors.forEach((currentError) => {
-                if(currentError.error !== 'EXTENSION' && currentError.error !== 'SIZE'){
+                if (currentError.error !== 'EXTENSION' && currentError.error !== 'SIZE') {
                     let error = document.createElement('span');
                     error.innerHTML = currentError.message;
                     this.wrapperError.appendChild(error);
@@ -973,7 +1031,8 @@ export default class Upload extends Emitter {
      * Test if object keys are equal
      * *******************************************************
      */
-    _compareKeys(a, b) {
+    _compareKeys(a, b)
+    {
         var aKeys = Object.keys(a).sort();
         var bKeys = Object.keys(b).sort();
         return JSON.stringify(aKeys) === JSON.stringify(bKeys);
@@ -984,7 +1043,8 @@ export default class Upload extends Emitter {
      * Return files list
      * *******************************************************
      */
-    get files() {
+    get files()
+    {
         return this.filesList;
     };
 
@@ -993,9 +1053,10 @@ export default class Upload extends Emitter {
      * Set new language
      * *******************************************************
      */
-    set language(language) {
+    set language(language)
+    {
 
-        if(!language || this.options.language === language || !this.fileInput){
+        if (!language || this.options.language === language || !this.fileInput) {
             return
         }
 
@@ -1003,24 +1064,22 @@ export default class Upload extends Emitter {
 
         this._cleanError();
 
-        if(this.filesList.length){
+        if (this.filesList.length) {
             this.wrapperSelected.innerHTML = this.text[this.options.language].textAfterUpload;
-        }
-        else{
+        } else {
             this.wrapperSelected.innerHTML = this.text[this.options.language].textBeforeUpload;
         }
 
-        if(this.options.displayRestSize){
+        if (this.options.displayRestSize) {
             this.restSize.innerHTML = this._getText(this.text[this.options.language].textSizeRest, this._getRestSize());
         }
 
-        if(this.options.displayMaxFileSize){
+        if (this.options.displayMaxFileSize) {
             this.maxFileSize.innerHTML = this._getText(this.text[this.options.language].textMaxFileSize, this._getFileSize(this.options.maxFileSize * 1048576));
         }
 
-        if(this.options.displayRestFiles){
+        if (this.options.displayRestFiles) {
             this.restFiles.innerHTML = this._getText(this.text[this.options.language].textFileRest, this.options.maxNbFiles);
         }
     }
-
 }

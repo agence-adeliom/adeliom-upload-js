@@ -39,7 +39,8 @@ const uploadField = {
     language: 'fr',
     languages: {},
     customContentOnly: false,
-    customContent: ''
+    customContent: '',
+    useBase64Inputs: false,
 }
 ```
 
