@@ -886,9 +886,9 @@ export default class Upload extends Emitter {
      */
     getFormData(form)
     {
-        let formData = new FormData(form[0]);
+        let formData = new FormData(form);
         for (let i = 0; i < this.filesList.length; i++) {
-            formData.append(fileInput.getAttribute("name") + '[' + i + ']', this.filesList[i]);
+            formData.append(this.fileInput.getAttribute("name") + '[' + i + ']', this.filesList[i]);
         }
         return formData;
     };
